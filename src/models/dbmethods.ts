@@ -12,29 +12,16 @@ interface PaginatedResult {
   offset: number;
 }
 
-interface UpdateOptions {
-  id?: string;
-  filter?: Record<string, any>;
-  updateOperation: Record<string, any>;
-}
+// interface UpdateOptions {
+//   id?: string;
+//   filter?: Record<string, any>;
+//   updateOperation: Record<string, any>;
+// }
 
 interface ModifiedResult {
   matchedCount: number;
   modifiedCount: number;
 }
-
-type DeleteOptions = Omit<UpdateOptions, 'updateOperation'>;
-
-export const getAll = async (collectionName: string): Promise<mongo.Document[]> => {
-  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
-  await client.connect();
-  const db = client.db(process.env.DB_NAME);
-  // add validation logic later
-  const collection = db.collection(collectionName);
-  const items = await collection.find({}).toArray();
-  await client.close();
-  return items;
-};
 
 export const getOne = async (collectionName: string, id: string): Promise<mongo.Document> => {
   const convertedId = new mongo.ObjectId(id);
@@ -71,6 +58,17 @@ export const getSome = async(
   return { data, totalDocuments, limit, offset };
 }
 
+export const getAll = async (collectionName: string): Promise<mongo.Document[]> => {
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  // add validation logic later
+  const collection = db.collection(collectionName);
+  const items = await collection.find({}).toArray();
+  await client.close();
+  return items;
+};
+
 export const insert = async (collectionName: string, newItems: object[]): Promise<string[]> => {
   const client = new mongo.MongoClient(process.env.MONGO_URL as string);
   await client.connect();
@@ -83,25 +81,17 @@ export const insert = async (collectionName: string, newItems: object[]): Promis
   return Object.values(result.insertedIds).map(String);
 };
 
-export const update = async (
+export const updateOne = async (
   collectionName: string,
-  options: UpdateOptions,
+  id: string,
+  updateOperation: Record<string, any>,
 ): Promise<ModifiedResult> => {
   const client = new mongo.MongoClient(process.env.MONGO_URL as string);
   await client.connect();
   const db = client.db(process.env.DB_NAME);
-  // add validation logic later
   const collection = db.collection(collectionName);
-  
-  let result: mongo.UpdateResult;
-
-  if (options.id !== undefined) {
-    const convertedId = new mongo.ObjectId(options.id);
-    result = await collection.updateOne({ _id: convertedId }, options.updateOperation);
-  } else {
-    const filter = options.filter ?? {};
-    result = await collection.updateMany(filter, options.updateOperation);
-  }
+  const convertedId = new mongo.ObjectId(id);
+  const result = await collection.updateOne({ _id: convertedId }, updateOperation);
   
   await client.close();
   return {
@@ -109,6 +99,47 @@ export const update = async (
     modifiedCount: result.modifiedCount,
   };
 };
+
+export const updateSome = async (
+  collectionName: string,
+  filter: Record<string, any>,
+  updateOperation: Record<string, any>,
+): Promise<ModifiedResult> => {
+  if (Object.keys(filter).length === 0) {
+    return {
+      matchedCount: 0,
+      modifiedCount: 0,
+    };
+  }
+  
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection(collectionName);
+  const result = await collection.updateMany(filter, updateOperation);
+  
+  await client.close();
+  return {
+    matchedCount: result.matchedCount,
+    modifiedCount: result.modifiedCount,
+  };
+};
+
+export const updateAll = async (collectionName: string, options: Record<string, any>): Promise<ModifiedResult> => {
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  // add validation logic later
+  const collection = db.collection(collectionName);
+  
+  const result = await collection.updateMany({}, options.updateOperation);
+  
+  await client.close();
+  return {
+    matchedCount: result.matchedCount,
+    modifiedCount: result.modifiedCount,
+  };
+}
 
 export const replace = async (collectionName: string, id: string, newItem: object) => {
   const client = new mongo.MongoClient(process.env.MONGO_URL as string);
@@ -127,24 +158,29 @@ export const replace = async (collectionName: string, id: string, newItem: objec
   };
 };
 
-export const remove = async (collectionName: string, options: DeleteOptions): Promise<number> => {
-  if (options.filter === undefined || Object.keys(options.filter).length === 0) return 0;
+export const removeOne = async (collectionName: string, id: string): Promise<number> => {
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  // add validation logic later
+  const collection = db.collection(collectionName);
+  const convertedId = new mongo.ObjectId(id)
+  const result = await collection.deleteOne({ _id: convertedId })
+  
+  await client.close();
+  return result.deletedCount;
+}
+
+export const removeSome = async (collectionName: string, filter: Record<string, any>): Promise<number> => {
+  if (Object.keys(filter).length === 0) return 0; // THROW ERROR INSTEAD OF RETURN 0
 
   const client = new mongo.MongoClient(process.env.MONGO_URL as string);
   await client.connect();
   const db = client.db(process.env.DB_NAME);
   // add validation logic later
   const collection = db.collection(collectionName);
+  const result = await collection.deleteMany(filter);
   
-  let result: mongo.DeleteResult;
-
-  if (options.id !== undefined) {
-    const convertedId = new mongo.ObjectId(options.id)
-    result = await collection.deleteOne({ _id: convertedId })
-  } else {
-    result = await collection.deleteMany(options.filter);
-  }
-
   await client.close();
   return result.deletedCount;
 }
