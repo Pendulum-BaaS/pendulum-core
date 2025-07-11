@@ -133,7 +133,7 @@ export const updateSome = async (
 
 export const updateAll = async (
   collectionName: string,
-  options: Record<string, any>
+  updateOperation: Record<string, any>
 ): Promise<ModifiedResult> => {
   const client = new mongo.MongoClient(process.env.MONGO_URL as string);
   await client.connect();
@@ -141,7 +141,7 @@ export const updateAll = async (
   // add validation logic later
   const collection = db.collection(collectionName);
 
-  const result = await collection.updateMany({}, options.updateOperation);
+  const result = await collection.updateMany({}, updateOperation);
 
   await client.close();
   return {
