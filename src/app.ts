@@ -4,7 +4,7 @@ import crudRoutes from './routes/crudRoutes';
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json()); // parses request bodies as JSON
 
 // Routes
 app.use('/api', crudRoutes);
