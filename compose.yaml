@@ -1,0 +1,14 @@
+services:
+  mongodb:
+    image: mongo:6.0
+
+  baas-backend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/test
+      - DB_NAME=test
+      - PORT=3000
+    depends_on:
+      - mongodb

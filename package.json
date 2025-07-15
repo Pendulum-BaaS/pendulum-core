@@ -2,8 +2,11 @@
   "name": "baas",
   "version": "1.0.0",
   "description": "Core BaaS service",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
+    "build": "npm run clean && tsc",
+    "start": "node dist/server.js",
+    "clean": "rm -rf dist",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts"
   },
   "author": "",
