@@ -1,4 +1,4 @@
-import express, { response } from 'express';
+import express from 'express';
 import crudRoutes from './routes/crudRoutes';
 import { Request, Response, NextFunction } from "express";
 // import { errorHandler } from './middlewares/errorHandler';
