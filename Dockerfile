@@ -32,4 +32,6 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
+RUN wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem -O /tmp/global-bundle.pem
+
 CMD ["node", "./dist/src/server.js"]
