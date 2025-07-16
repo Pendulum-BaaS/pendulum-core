@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "npm run clean && tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "clean": "rm -rf dist",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts"
   },
