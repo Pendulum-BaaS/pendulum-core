@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { removeOne, removeSome, removeAll } from "../models/dbmethods";
+import { eventEmitter } from "../events/eventEmitter";
 
 export const one = async (req: Request, res: Response, next: NextFunction) => {
    try {
     const id = req.params.id;
     const collection = String(req.query.collection);
+    const filter = { _id: id };
 
     const result = await removeOne(collection, id);
+    eventEmitter.emitDelete(collection, filter, [result]);
     res.json(result);
   } catch (error) {
     console.log(error) // ERROR HANDLING LATER
@@ -60,9 +63,11 @@ const formatFilter = (query: Record<string, any>) => {
 
 export const some = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { collection, ...filter } = req.query;
+    const { ...filter } = req.query;
+    const collection = String(req.query.collection); // Make less ugly?
     const formattedFilter = formatFilter(filter);
-    const result = await removeSome(String(collection), formattedFilter);
+    const result = await removeSome(collection, formattedFilter);
+    eventEmitter.emitDelete(collection, formattedFilter, result);
     res.json(result);
   } catch (error) {
     console.error(error); // ADD ERROR HANDLING LATER
@@ -70,10 +75,12 @@ export const some = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const all = async (req: Request, res: Response, next: NextFunction) => {
- try {
+  try {
     const collection = String(req.query.collection);
+    const filter = {};
 
     const result = await removeAll(collection);
+    eventEmitter.emitDelete(collection, filter, result);
     res.json(result);
   } catch (error) {
     console.log(error) // ERROR HANDLING LATER
