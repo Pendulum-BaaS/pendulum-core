@@ -68,23 +68,6 @@ app.get('/events', (req: Request, res: Response) => {
   });
 });
 
-// API endpoint to broadcast messages to clients connected
-app.post('/events', (req: Request, res: Response) => {
-  const { collection, action, eventData } = req.body;
-
-  if (!collection || !action) {
-    return res.status(400).json({ error: 'collection and action are required' });
-  }
-
-  const sseData: DatabaseEvent = { collection, action, eventData };
-  sseManager.broadcast(sseData);
-
-  res.json({
-    success: true,
-    message: `Event broadcasted to ${sseManager.getClientCount()} clients`,
-  });
-});
-
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
