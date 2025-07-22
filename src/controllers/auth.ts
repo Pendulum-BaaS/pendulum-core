@@ -41,22 +41,38 @@ export const login = async (
     const { username, password } = req.body;
     const userInfo = await loginUser(username);
     if (userInfo === null) {
-      res.status(401).send("Authentication failed");
+      return res.status(401).send("Authentication failed");
     } else {
       const pwMatch = await bcrypt.compare(password, userInfo.password);
-      if (!pwMatch) res.status(401).send("Authentication failed");
+      if (!pwMatch) {
+        return res.status(401).send("Authentication failed");
+      }
       const token = jwt.sign({
         userId: String(userInfo._id),
         // add user role from db
       },
       process.env.JWT_SECRET as string,
       {
-        expiresIn: "15m",
+        expiresIn: "24h",
       }
     );
-    res.status(200).send(token);
+    res.cookie("token", token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    res.status(200).send({ userId: userInfo._id });
     }
   } catch (error) {
     res.status(500).send("Login Failed");
+  }
+};
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.clearCookie("token");
+    res.sendStatus(200);
+  } catch (error) {
+    res.status(500).send("Logout Failed");
   }
 };

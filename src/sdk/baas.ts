@@ -161,4 +161,21 @@ export class BaaS {
     });
     return response.data;
   }
+
+  async register(username: string, email: string, password: string) {
+    const body = { username, email, password };
+    const response = await axios.post("http://localhost:3000/auth/register", body);
+    return response.status === 201;
+  }
+
+  async login(username: string, password: string) {
+    const body = { username, password };
+    const response = await axios.post("http://localhost:3000/auth/login", body);
+    return response.data.userId;
+  }
+
+  async logout() {
+    const response = await axios.post("http://localhost:3000/auth/logout");
+    return response.status === 200;
+  }
 }
