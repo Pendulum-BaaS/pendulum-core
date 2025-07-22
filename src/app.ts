@@ -10,7 +10,7 @@ app.use(express.json()); // parses request bodies as JSON
 
 // Routes
 app.use("/api", crudRoutes);
-app.use("auth", authRoutes);
+app.use("/auth", authRoutes);
 
 app.get("/health", (req: Request, res: Response) => {
   res.sendStatus(200);

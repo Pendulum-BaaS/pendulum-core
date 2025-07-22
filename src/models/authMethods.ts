@@ -20,3 +20,15 @@ export const addUser = async (userData: User): Promise<boolean> => {
   await client.close();
   return !!result.insertedId;
 };
+
+export const loginUser = async (
+  username: string,
+): Promise<mongo.WithId<mongo.BSON.Document> | null> => {
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection(COLLECTION_NAME);
+  const result = await collection.findOne({ username: username });
+  await client.close();
+  return result;
+};
