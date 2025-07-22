@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import { insert } from "../models/dbmethods";
-
-const USER_COLLECTION = "users";
+import { addUser } from "../models/authMethods";
+import { User } from "../models/authMethods";}
 
 export const register = async (
   req: Request,
@@ -13,14 +12,17 @@ export const register = async (
     const { username, email, password } = req.body;
     const salt = await bcrypt.genSalt(); // default 10 rounds
     const hashedPw = await bcrypt.hash(password, salt);
-    await insert(USER_COLLECTION, [
-      {
-        username,
-        email,
-        password: hashedPw,
-      },
-    ]);
-    res.status(201).send("User succesfully created");
+		const userData: User = {
+			username,
+			email,
+			password: hashedPw
+		};
+    const result = await addUser(userData);
+    if (result) {
+    	res.status(201).send("User succesfully created");
+    } else {
+			throw new Error();
+    }
   } catch (error) {
     res.status(500).send("User registration failed");
   }
