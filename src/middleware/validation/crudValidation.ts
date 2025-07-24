@@ -4,8 +4,8 @@ import { createError } from "../errorHandler";
 const COLLECTION_NAME_REGEX = /^[a-zA-Z][a-zA-Z0-9_-]*$/; // starts with a letter, followed by alphanumeric underscores and hyphens
 const COLLECTION_NAME_MAX = 30;
 const MONGODB_ID_REGEX = /^[0-9a-fA-F]{24}$/;
-const MAX_LIMIT = 1000;
-const MAX_OFFSET = 100000;
+// const MAX_LIMIT = 1000;
+// const MAX_OFFSET = 100000;
 
 const isValidCollectionName = (collection: string): boolean => {
   return (
