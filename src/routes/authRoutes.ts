@@ -1,19 +1,13 @@
 import { Router } from "express";
 import { login, register, logout } from "../controllers/auth";
-import {
-  validateRegistration,
-  validateLogin,
-  validateToken,
-  validatePasswordReset,
-  validatePasswordChange,
-} from "../middleware/validation/authValidation";
+import * as authValidation from "../middleware/validation/authValidation";
 import { asyncHandler } from "../middleware/errorHandler";
 
 const router = Router();
 
-router.post("/register", validateRegistration, asyncHandler(register));
-router.post("/login", validateLogin, asyncHandler(login));
-router.post("/logout", validateToken, asyncHandler(logout));
+router.post("/register", authValidation.validateRegistration, asyncHandler(register));
+router.post("/login", authValidation.validateLogin, asyncHandler(login));
+router.post("/logout", authValidation.validateToken, asyncHandler(logout));
 
 // Optional to add
 // router.post("/password-reset", validatePasswordReset, asyncHandler(passwordResetRequest));
