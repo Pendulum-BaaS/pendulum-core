@@ -1,19 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { removeOne, removeSome, removeAll } from "../models/dbmethods";
 import { eventEmitter } from "../events/eventEmitter";
+import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 
 export const one = async (req: Request, res: Response, next: NextFunction) => {
-   try {
-    const id = req.params.id;
-    const collection = String(req.query.collection);
-    const filter = { _id: id };
+  const id = req.params.id; // validated and sanitized in middleware
+  const collection = String(req.query.collection); // validated and sanitized in middleware
+  const filter = { _id: id };
 
-    const result = await removeOne(collection, id);
-    eventEmitter.emitDelete(collection, filter, [result]);
-    res.json(result);
-  } catch (error) {
-    console.log(error) // ERROR HANDLING LATER
-  }
+  const result = await removeOne(collection, id);
+  eventEmitter.emitDelete(collection, filter, [result]);
+  res.json(result);
 };
 
 const formatFilter = (query: Record<string, any>) => {
@@ -62,27 +59,20 @@ const formatFilter = (query: Record<string, any>) => {
 };
 
 export const some = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { ...filter } = req.query;
-    const collection = String(req.query.collection); // Make less ugly?
-    const formattedFilter = formatFilter(filter);
-    const result = await removeSome(collection, formattedFilter);
-    eventEmitter.emitDelete(collection, formattedFilter, result);
-    res.json(result);
-  } catch (error) {
-    console.error(error); // ADD ERROR HANDLING LATER
-  }
+  const { collection, ...filter } = req.query; // collection validated and sanitized in middleware
+  const sanitizedCollection = collection as string; // already sanitize in middleware but ts doesn't know type
+  const formattedFilter = formatFilter(filter);
+
+  const result = await removeSome(sanitizedCollection, formattedFilter);
+  eventEmitter.emitDelete(sanitizedCollection, formattedFilter, result);
+  res.json(result);
 };
 
 export const all = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const collection = String(req.query.collection);
-    const filter = {};
+  const collection = String(req.query.collection); // validated and sanitized in middleware
+  const filter = {};
 
-    const result = await removeAll(collection);
-    eventEmitter.emitDelete(collection, filter, result);
-    res.json(result);
-  } catch (error) {
-    console.log(error) // ERROR HANDLING LATER
-  }
+  const result = await removeAll(collection);
+  eventEmitter.emitDelete(collection, filter, result);
+  res.json(result);
 };
