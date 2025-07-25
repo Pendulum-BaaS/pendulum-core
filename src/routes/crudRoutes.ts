@@ -4,7 +4,7 @@ import * as getController from '../controllers/get';
 import * as updateController from '../controllers/update';
 import { insertController } from '../controllers/insert';
 import { replaceController } from '../controllers/replace';
-import * as crudValidation from '../middleware/validation/crudValidation';
+import * as crudValidation from '../middleware/errorHandlingAndValidation/validation/crudValidation';
 
 const router = Router();
 

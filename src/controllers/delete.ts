@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { removeOne, removeSome, removeAll } from "../models/dbmethods";
 import { eventEmitter } from "../events/eventEmitter";
-import { createError } from "../middleware/errorHandler";
+import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 
 export const one = async (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.id; // validated and sanitized in middleware

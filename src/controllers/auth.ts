@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import { addUser, loginUser } from "../models/authMethods";
 import { User } from "../models/authMethods";
-import { createError } from "../middleware/errorHandler";
+import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 
