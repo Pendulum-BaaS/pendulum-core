@@ -7,7 +7,10 @@ This BaaS implements a comprehensive error handling and validation system design
 The system uses a two-tier approach:
 
 ### Tier 1 - Route-Level Validation:
-Middleware functions validate and sanitize all incoming requests before they reach controllers. This includes checking required fields, data types, formats, and applying security rules.
+Middleware functions validate and sanitize all incoming requests before they reach controllers. This middleware:
+- Validates required fields and data types
+- Sanitizes and normalizes input data
+- Checks format constraints (MongoDB IDs, email addresses, etc.)
 
 ### Tier 2 - Business Logic Layer:
 Controllers focus on executing business logic with pre-validated data, with the auth controller performing additional checks like password verification and user existence validation. Database operations and business logic can throw custom errors when operations fail.
@@ -20,7 +23,7 @@ Both tiers feed into a centralized error handler that formats responses consiste
 - **Enhanced Security**: Input sanitization prevents injection attacks and data corruption.
 - **Developer-Friendly**: Clear error messages with specific codes help identify and resolve issues quickly.
 
-The following sections will walk you through the specific components, error types, and practical examples to help you effectively use and extend this system.
+"The following sections will walk you through the specific components, error types, and practical examples for working with this system."
 
 # Error Handling Architecture
 
@@ -92,22 +95,15 @@ The handler also includes special logic for recognizing common error types like 
 
 ## Standardized Error Response Format
 
-All errors return a consistent JSON structure:
+All errors return a consistent JSON structure with the following properties:
+- `success`: Always `false` for errors
+- `error.message`: Human-readable error description
+- `error.statusCode`: HTTP status code
+- `error.errorCode`: Machine-readable error identifier (optional)
+- `error.timestamp`: ISO timestamp of when the error occurred
+- `error.path`: The API endpoint that generated the error
 
-```json
-{
-  "success": false,
-  "error": {
-    "message": "Collection name is required",
-    "statusCode": 400,
-    "errorCode": "MISSING_COLLECTION",
-    "timestamp": "2024-01-15T10:30:45.123Z",
-    "path": "/api/users"
-  }
-}
-```
-
-In development environments, a `stack` property is included for debugging. The format ensures that client applications can reliably parse error responses and handle them appropriately.
+This consistent format ensures that client applications can reliably parse and handle error responses. See Section 4 for detailed examples and development vs production differences.
 
 ## 404 Handler
 
@@ -120,22 +116,9 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
 };
 ```
 
-This ensures that invalid routes return errors in the same standardized format as application errors.
+This ensures that even invalid routes return errors in the same standardized format as application errors.
 
 # Validation System
-
-## Two-Tier Validation Architecture
-
-The validation system operates at two levels to ensure data integrity and security:
-
-### Tier 1: Route-Level Validation Middleware
-All requests pass through validation middleware before reaching the controllers. This middleware:
-- Validates required fields and data types
-- Sanitizes and normalizes input data
-- Checks format constraints (MongoDB IDs, email addresses, etc.)
-
-### Tier 2: Business Logic Layer
-Controllers focus on business logic execution, with most validation already completed at the middleware layer. The auth controller performs additional checks like password verification and user existence validation.
 
 ## CRUD Validation
 
@@ -263,34 +246,6 @@ All text inputs are sanitized and normalized for data consistency:
 - Explicit type checking before operations
 - Validation of array and object structures
 
-### Filter Parameter Handling
-For delete and update operations, query parameters are converted to MongoDB filter objects:
-
-```typescript
-const formatFilter = (query: Record<string, any>) => {
-  const filter: Record<string, any> = {};
-  
-  Object.keys(query).forEach(key => {
-    if (key.includes('[') && key.includes(']')) {
-      // Handle operators like price[gte]=100
-      const [field, operator] = key.split('[');
-      const op = operator.replace(']', '');
-      
-      switch(op) {
-        case 'gte': case 'gt': case 'lte': case 'lt':
-          filter[field] = { [`$${op}`]: Number(value) };
-          break;
-        case 'in': case 'nin':
-          filter[field] = { [`$${op}`]: value.split(',') };
-          break;
-      }
-    }
-  });
-  
-  return filter;
-};
-```
-
 ## Error Integration
 
 Validation failures automatically trigger appropriate error responses:
@@ -388,7 +343,7 @@ case 'MongoServerError':
   break;
 ```
 
-"MongoDB errors are logged server-side for debugging, clients receive a generic 'Database error' message instead of specific MongoDB error details.".
+"MongoDB errors are logged server-side for debugging, clients receive a generic 'Database error' message instead of specific MongoDB error details."
 
 ## JWT Error Handling
 
@@ -486,7 +441,7 @@ In development environments, error responses include a `stack` property with the
 
 ### Basic Error Response Parsing
 
-All error responses follow the same structure, making client-side handling predictable:
+All error responses follow the standardized structure shown in Section 4. Here's how to handle them:
 
 ```javascript
 try {
@@ -537,11 +492,14 @@ try {
 }
 ```
 
-## Error Handling Patterns
+## Common Scenarios
 
-### Validation Error Recovery
-
+### Handling Validation Errors
 ```javascript
+// Example: Missing collection name returns MISSING_COLLECTION
+// Example: Invalid MongoDB ID returns INVALID_ID_FORMAT  
+// Example: Empty insert array returns EMPTY_NEW_ITEMS_ARRAY
+
 async function createUser(userData) {
   try {
     return await client.insert('users', [userData]);
@@ -562,25 +520,24 @@ async function createUser(userData) {
 }
 ```
 
-### Retry Logic for Server Errors
-
+### Handling Authentication Errors
 ```javascript
-async function withRetry(operation, maxRetries = 3) {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error) {
-      const statusCode = error.response?.data?.error?.statusCode;
-      
-      // Only retry on server errors (5xx)
-      if (statusCode >= 500 && attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-        continue;
-      }
-      
-      throw error;
+// Example: Missing auth header returns MISSING_AUTH_HEADER
+// Example: Wrong credentials return INVALID_CREDENTIALS
+
+async function loginUser(username, password) {
+  try {
+    return await client.login(username, password);
+  } catch (error) {
+    const { errorCode } = error.response?.data?.error || {};
+    
+    if (errorCode === 'INVALID_CREDENTIALS') {
+      throw new Error('Username or password is incorrect');
+    } else if (errorCode === 'MISSING_AUTH_HEADER') {
+      throw new Error('Authorization required');
     }
+    
+    throw error;
   }
 }
 ```
-
