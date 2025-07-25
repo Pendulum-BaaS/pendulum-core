@@ -1,8 +1,7 @@
 {
-  "name": "baas",
+  "name": "@pendulum/core",
   "version": "1.0.0",
-  "description": "Core BaaS service",
-  "main": "dist/appServer.js",
+  "description": "Backend Pendulum server",
   "scripts": {
     "build": "npm run clean && tsc",
     "start": "node dist/src/appServer.js",
@@ -10,7 +9,7 @@
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/appServer.ts"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",

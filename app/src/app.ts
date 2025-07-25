@@ -2,11 +2,14 @@ import express from "express";
 import crudRoutes from "./routes/crudRoutes";
 import authRoutes from "./routes/authRoutes";
 import { Request, Response, NextFunction } from "express";
-import { errorHandler, notFoundHandler } from "./middleware/errorHandlingAndValidation/errorHandler";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middleware/errorHandlingAndValidation/errorHandler";
 
 const app = express();
 
-app.use(express.json()); // parses request bodies as JSON
+app.use(express.json());
 
 // Routes
 app.use("/api", crudRoutes);
