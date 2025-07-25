@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { Request, Response } from "express";
+import sseRouter from "./routes/sseRoutes";
 import internalRouter from "./routes/internalRoutes";
-import sseRouter from "./routes/internalRoutes";
 import { sseManager } from "./models";
 
 export const app = express();

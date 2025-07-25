@@ -1,7 +1,7 @@
 import { Router } from "express";
-import eventsController from "./controllers";
+import { eventsController } from "../controllers";
 
-const sseRouter = Router();
-sseRouter.use("/");
+const router = Router();
+router.get("/", eventsController);
 
-export default sseRouter;
+export default router;
