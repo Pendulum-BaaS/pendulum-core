@@ -1,18 +1,7 @@
 import { EventEmitter } from "events";
+import { DatabaseEvent } from "../types";
 
-interface DatabaseEvent {
-  collection: string;
-  action: "insert" | "update" | "delete"; // make symbol?
-  eventData: {
-    affected?: any[]; // The database records that were affected
-    filter?: any; // For update/delete operations, what filter was used
-    updateOperation?: any; // For update operations, what changes were made
-    count?: number; // How many records were affected
-    ids?: string[]; // IDs of affected records
-  };
-}
-
-export const DB_EVENTS = {
+const DB_EVENTS = {
   INSERT: "insert",
   UPDATE: "update",
   DELETE: "delete",
@@ -93,8 +82,4 @@ class DatabaseEventEmitter extends EventEmitter {
   }
 }
 
-// create singleton instance to be used by SSE server & controllers
-const eventEmitter = new DatabaseEventEmitter();
-
-export { eventEmitter };
-export type { DatabaseEvent };
+export const eventEmitter = new DatabaseEventEmitter();
