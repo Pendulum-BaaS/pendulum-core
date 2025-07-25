@@ -1,14 +1,43 @@
 services:
   mongodb:
     image: mongo:6.0
+    container_name: pendulum-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - pendulum-network
 
-  baas-backend:
-    build: .
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    container_name: pendulum-app
     ports:
       - "3000:3000"
     environment:
-      - MONGO_URL=mongodb://mongodb:27017/test
-      - DB_NAME=test
       - PORT=3000
+      - MONGO_URL=mongodb://mongodb:27017/pendulum
+      - EVENTS_SERVICE_URL=http://events:8080
     depends_on:
       - mongodb
+      - events
+    networks:
+      - pendulum-network
+
+  events:
+    build:
+      context: .
+      dockerfile: events/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - pendulum-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  pendulum-network:
+    driver: bridge
