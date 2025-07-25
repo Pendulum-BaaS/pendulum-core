@@ -130,13 +130,6 @@ export const errorHandler = (
   res.status(statusCode).json(errorResponse);
 }
 
-// middleware to catch async errors (for async route handlers)
-export const asyncHandler = (fn: Function) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-};
-
 // 404 handler for invalid routes
 export const notFoundHandler = (req: Request, res: Response, next: NextFunction): void => {
   const error = new CustomError(`Route ${req.originalUrl} not found`, 404, 'ROUTE_NOT_FOUND');

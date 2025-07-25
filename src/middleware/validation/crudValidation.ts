@@ -161,7 +161,7 @@ export const validateGetAll = (
 };
 
 // POST validation
-export const validateInsert = (
+export const validateInsert = ( // ADD CHECK TO MAKE SURE 
   req: Request,
   res: Response,
   next: NextFunction,
