@@ -10,13 +10,6 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-const missingUserHandler = (): never => {
-  throw createError.internal(
-    'User info not found after authentication',
-    'MISSING_USER_DATA'
-  );
-};
-
 export const authenticateToken = (
   req: AuthenticatedRequest,
   res: Response,
