@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, register, logout, updateUserRole } from "../controllers/auth";
+import { login, register, logout, updateUserRole, getCurrentUser } from "../controllers/auth";
 import * as authValidation from "../middleware/errorHandlingAndValidation/validation/authValidation";
 import { authenticateToken, requireManagementAccess } from "../middleware/roleAuth";
 
@@ -10,6 +10,7 @@ router.post("/register", authValidation.validateRegistration, register);
 router.post("/login", authValidation.validateLogin, login);
 
 // auth routes, require JWT token
+router.get("/me", authenticateToken, getCurrentUser);
 router.post("/logout", authenticateToken, logout);
 // Optional to add
 // router.post("/password-reset", validatePasswordReset, asyncHandler(passwordResetRequest));

@@ -9,7 +9,7 @@ import { authenticateToken, requireResourceAccess } from '../middleware/roleAuth
 
 const router = Router();
 
-// users read own data, editors/admin read all
+// read operations
 router.get('/:id', // get one
   authenticateToken,
   requireResourceAccess('read'),
@@ -31,7 +31,7 @@ router.get('/', // get all
   getController.all
 );
 
-// users create own data, editors/admin create any
+// create operations
 router.post('/', // insert one
   authenticateToken,
   requireResourceAccess('write'),
@@ -39,7 +39,7 @@ router.post('/', // insert one
   insertController
 );
 
-// users update own data, editors/admins update any
+// update operations
 router.patch('/:id', // update one
   authenticateToken,
   requireResourceAccess('write'),
@@ -61,7 +61,7 @@ router.patch('/', // update all
   updateController.all
 );
 
-// users replace own data, editors/admins update any
+// replace operations
 router.put('/:id', // replace one
   authenticateToken,
   requireResourceAccess('write'),
@@ -69,7 +69,7 @@ router.put('/:id', // replace one
   replaceController
 );
 
-// users delete own data, editors/admins update any
+// delete operations
 router.delete('/:id', // delete one
   authenticateToken,
   requireResourceAccess('delete'),
