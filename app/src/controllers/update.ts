@@ -1,30 +1,107 @@
 import { Request, Response, NextFunction } from "express";
-import { updateOne, updateSome, updateAll } from "../models/dbmethods";
+import { getOne, updateOne, updateSome, updateAll } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
+import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { hasPermission } from "../models/roleDefinitions";
+import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
+import { getAuthenticatedUser, validateDocumentAccess, permissionChecker } from "../utils/auth";
 
-export const one = async (req: Request, res: Response, next: NextFunction) => {
+export const one = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const id = req.params.id;
-  const { collection, updateOperation } = req.body.collection;
-  const filter = { _id: id };
+  const { collection, updateOperation } = req.body;
 
-  const result = await updateOne(collection, id, updateOperation);
-  eventClient.emitUpdate(collection, filter, [result], updateOperation);
-  res.json(result);
+  try {
+    const user = getAuthenticatedUser(req);
+
+    const existingDoc = await getOne(collection, id);
+    if (!existingDoc || existingDoc.length === 0) {
+      throw createError.notFound('Document not found', 'DOCUMENT_NOT_FOUND');
+    }
+
+    const doc = existingDoc[0];
+    const hasGlobalWrite = hasPermission(user.role, 'write:all');
+
+    validateDocumentAccess(user, doc, 'update', hasGlobalWrite); // check permissions for this doc
+
+    const formattedOperation = {
+      ...updateOperation,
+      $set: {
+        ...updateOperation.$set,
+        updatedAt: new Date(),
+        updatedBy: user.userId,
+      },
+    };
+
+    const result = await updateOne(collection, id, formattedOperation);
+    if (!result) throw createError.notFound(
+      'Document not found or could not be updated',
+      'UPDATE_FAILED'
+    );
+
+    eventClient.emitUpdate(collection, { _id: id }, [result], formattedOperation);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const some = async (req: Request, res: Response, next: NextFunction) => {
-  const { collection, filter, updateOperation } = req.body.collection;
+export const some = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { collection, filter, updateOperation } = req.body;
 
-  const result = await updateSome(collection, filter, updateOperation);
-  eventClient.emitUpdate(collection, filter, result, updateOperation);
-  res.json(result);
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!hasPermission(user.role, 'write:all')) { // manual check for bulk operations
+      throw createError.forbidden(
+        'Access denied: insufficient permissions to update multiple documents',
+        'INSUFFICIENT_PERMISSIONS'
+      );
+    }
+
+    const formattedOperation = {
+      ...updateOperation,
+      $set: {
+        ...updateOperation.$set,
+        updatedAt: new Date(),
+        updatedBy: user.userId,
+      },
+    };
+
+    const result = await updateSome(collection, filter, formattedOperation);
+    eventClient.emitUpdate(collection, filter, result, formattedOperation);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const all = async (req: Request, res: Response, next: NextFunction) => {
-  const { collection, updateOperation } = req.body.collection;
-  const filter = {};
+export const all = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const { collection, updateOperation } = req.body;
 
-  const result = await updateAll(collection, updateOperation);
-  eventClient.emitUpdate(collection, filter, result, updateOperation);
-  res.json(result);
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!hasPermission(user.role, 'write:all')) { // manual check for bulk operations
+      throw createError.forbidden(
+        'Access denied: insufficient permissions to update all documents',
+        'INSUFFICIENT_PERMISSIONS'
+      );
+    }
+
+    const formattedOperation = {
+      ...updateOperation,
+      $set: {
+        ...updateOperation.$set,
+        updatedAt: new Date(),
+        updatedBy: user.userId,
+      },
+    };
+
+    const filter = {};
+    const result = await updateAll(collection, formattedOperation);
+    eventClient.emitUpdate(collection, filter, result, formattedOperation);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };

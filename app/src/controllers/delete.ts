@@ -1,16 +1,42 @@
 import { Request, Response, NextFunction } from "express";
-import { removeOne, removeSome, removeAll } from "../models/dbmethods";
+import { removeOne, removeSome, removeAll, getOne } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
+import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { hasPermission } from "../models/roleDefinitions";
+import { getAuthenticatedUser, validateDocumentAccess } from "../utils/auth";
 
-export const one = async (req: Request, res: Response, next: NextFunction) => {
+
+export const one = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const id = req.params.id;
   const collection = String(req.query.collection);
-  const filter = { _id: id };
 
-  const result = await removeOne(collection, id);
-  eventClient.emitDelete(collection, filter, [result]);
-  res.json(result);
+  try {
+    const user = getAuthenticatedUser(req);
+    const existingDoc = await getOne(collection, id);
+    if (!existingDoc || existingDoc.length === 0) {
+      throw createError.notFound('Document not found', 'DOCUMENT_NOT_FOUND');
+    }
+
+    const doc = existingDoc[0];
+    const hasGlobalDelete = hasPermission(user.role, 'delete:all');
+    validateDocumentAccess(user, doc, 'delete', hasGlobalDelete); // check permissions for this doc
+
+    const result = await removeOne(collection, id);
+    if (!result) throw createError.notFound(
+      'Document not found or could not be deleted',
+      'DELETE_FAILED'
+    );
+
+    eventClient.emitDelete(collection, { _id: id }, [result]);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const formatFilter = (query: Record<string, any>) => {
@@ -58,21 +84,55 @@ const formatFilter = (query: Record<string, any>) => {
   return filter;
 };
 
-export const some = async (req: Request, res: Response, next: NextFunction) => {
-  const { collection, ...filter } = req.query;
+export const some = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { collection, ...filterParams } = req.query;
   const sanitizedCollection = collection as string;
-  const formattedFilter = formatFilter(filter);
 
-  const result = await removeSome(sanitizedCollection, formattedFilter);
-  eventClient.emitDelete(sanitizedCollection, filter, result);
-  res.json(result);
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!hasPermission(user.role, 'delete:all')) {
+      throw createError.forbidden(
+        'Access denied: insufficient permissions to delete multiple documents',
+        'INSUFFICIENT_PERMISSIONS'
+      );
+    }
+
+    const formattedFilter = formatFilter(filterParams);
+    const result = await removeSome(sanitizedCollection, formattedFilter);
+    eventClient.emitDelete(sanitizedCollection, formattedFilter, result);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const all = async (req: Request, res: Response, next: NextFunction) => {
+export const all = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const collection = String(req.query.collection);
-  const filter = {};
 
-  const result = await removeAll(collection);
-  eventClient.emitDelete(collection, filter, result);
-  res.json(result);
+  try {
+    const user = getAuthenticatedUser(req);
+
+    if (!hasPermission(user.role, 'delete:all')) {
+      throw createError.forbidden(
+        'Access denied: insufficient permissions to delete all documents',
+        'INSUFFICIENT_PERMISSIONS'
+      );
+    }
+
+    const filter = {};
+    const result = await removeAll(collection);
+    eventClient.emitDelete(collection, filter, result);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 };
