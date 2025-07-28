@@ -62,10 +62,7 @@ export const requirePermission = (permission: string) => {
   };
 };
 
-export const requireResourceAccess = (
-  action: 'read' | 'write' | 'delete',
-  allowOwn: boolean=false
-) => {
+export const requireResourceAccess = (action: 'read' | 'write' | 'delete') => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     const user = req.user;
     if (!user) {
@@ -77,7 +74,7 @@ export const requireResourceAccess = (
       return;
     }
 
-    if (allowOwn && hasPermission(user.role, `${action}:own`)) {
+    if (hasPermission(user.role, `${action}:own`)) {
       next();
       return;
     }

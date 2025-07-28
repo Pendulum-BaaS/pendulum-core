@@ -12,21 +12,21 @@ const router = Router();
 // users read own data, editors/admin read all
 router.get('/:id', // get one
   authenticateToken,
-  requireResourceAccess('read', true),
+  requireResourceAccess('read'),
   crudValidation.validateGetOne,
   getController.one
 );
 
 router.get('/some', // get some
   authenticateToken,
-  requireResourceAccess('read', true),
+  requireResourceAccess('read'),
   crudValidation.validateGetSome,
   getController.some
 );
 
 router.get('/', // get all
   authenticateToken,
-  requireResourceAccess('read', true),
+  requireResourceAccess('read'),
   crudValidation.validateGetAll,
   getController.all
 );
@@ -34,7 +34,7 @@ router.get('/', // get all
 // users create own data, editors/admin create any
 router.post('/', // insert one
   authenticateToken,
-  requireResourceAccess('write', true),
+  requireResourceAccess('write'),
   crudValidation.validateInsert,
   insertController
 );
@@ -42,7 +42,7 @@ router.post('/', // insert one
 // users update own data, editors/admins update any
 router.patch('/:id', // update one
   authenticateToken,
-  requireResourceAccess('write', true),
+  requireResourceAccess('write'),
   crudValidation.validateUpdateOne,
   updateController.one
 );
@@ -64,7 +64,7 @@ router.patch('/', // update all
 // users replace own data, editors/admins update any
 router.put('/:id', // replace one
   authenticateToken,
-  requireResourceAccess('write', true),
+  requireResourceAccess('write'),
   crudValidation.validateReplace,
   replaceController
 );
@@ -72,7 +72,7 @@ router.put('/:id', // replace one
 // users delete own data, editors/admins update any
 router.delete('/:id', // delete one
   authenticateToken,
-  requireResourceAccess('delete', true),
+  requireResourceAccess('delete'),
   crudValidation.validateDeleteOne,
   deleteController.one
 );
