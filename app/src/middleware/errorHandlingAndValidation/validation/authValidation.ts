@@ -195,7 +195,7 @@ export const validateRoleUpdate = (
   res: Response,
   next: NextFunction,
 ): void => {
-  const role = req.body.cole;
+  const role = req.body.role;
   const userId = req.params.userId;
 
   if (!userId) throw createError.badRequest('User ID is required', 'MISSING_USER_ID');
