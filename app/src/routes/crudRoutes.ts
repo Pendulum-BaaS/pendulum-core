@@ -5,7 +5,7 @@ import * as updateController from '../controllers/update';
 import { insertController } from '../controllers/insert';
 import { replaceController } from '../controllers/replace';
 import * as crudValidation from '../middleware/errorHandlingAndValidation/validation/crudValidation';
-import { authenticateToken, requireResourceAccess } from '../middleware/roleAuth';
+import { authenticateToken, requireResourceAccess } from '../middleware/rbac/roleAuth';
 
 const router = Router();
 
