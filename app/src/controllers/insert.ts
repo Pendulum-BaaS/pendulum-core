@@ -1,14 +1,33 @@
 import { Request, Response, NextFunction } from "express";
 import { insert } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
+import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { getAuthenticatedUser, permissionChecker } from "../utils/auth";
 
 export const insertController = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction,
 ) => {
   const { collection, newItems } = req.body;
-  const result = await insert(collection, newItems);
-  eventClient.emitInsert(collection, result);
-  res.json(result);
+
+  try {
+    const user = getAuthenticatedUser(req);
+    permissionChecker.create(user);
+
+    const itemsToInsert = Array.isArray(newItems) ? newItems : [newItems];
+    const formattedItems = itemsToInsert.map(item => ({
+      ...item,
+      userId: user.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: user.userId,
+    }));
+
+    const result = await insert(collection, formattedItems);
+    eventClient.emitInsert(collection, result);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
 };

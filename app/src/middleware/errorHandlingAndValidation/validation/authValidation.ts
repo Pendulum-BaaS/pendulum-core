@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { createError } from "../errorHandler";
+import { UserRole, USER_ROLES } from "../../../models/roleDefinitions";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_MIN = 3;
@@ -140,7 +141,7 @@ export const validatePasswordReset = (
   res: Response,
   next: NextFunction,
 ): void => {
-  const { email } = req.body;
+  const email = req.body.email;
 
   if (!email) throw createError.badRequest('Email is required', 'MISSING_EMAIL');
 
@@ -188,3 +189,32 @@ export const validatePasswordChange = (
 
   next();
 }
+
+export const validateRoleUpdate = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  const role = req.body.role;
+  const userId = req.params.userId;
+
+  if (!userId) throw createError.badRequest('User ID is required', 'MISSING_USER_ID');
+  if (!role) throw createError.badRequest('Role is required', 'MISSING_ROLE');
+
+  if (!Object.values(USER_ROLES).includes(role)) {
+    throw createError.badRequest(
+      'Invalid role: must be admin, editor, or user',
+      'INVALID_ROLE'
+    );
+  }
+
+  const MONGODB_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+  if (!MONGODB_ID_REGEX.test(userId)) {
+    throw createError.badRequest(
+      'Invalid user ID format',
+      'INVALID_USER_ID_FORMAT'
+    );
+  }
+
+  next();
+};
