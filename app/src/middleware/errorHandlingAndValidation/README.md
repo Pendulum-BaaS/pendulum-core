@@ -11,6 +11,7 @@ Middleware functions validate and sanitize all incoming requests before they rea
 - Validates required fields and data types
 - Sanitizes and normalizes input data
 - Checks format constraints (MongoDB IDs, email addresses, etc.)
+- Verifies user authentication and role-based permissions
 
 ### Tier 2 - Business Logic Layer:
 Controllers focus on executing business logic with pre-validated data, with the auth controller performing additional checks like password verification and user existence validation. Database operations and business logic can throw custom errors when operations fail.
@@ -233,6 +234,44 @@ export const validateToken = (req: Request, res: Response, next: NextFunction): 
 };
 ```
 
+## Role-Based Access Control
+
+The system implements role-based permissions that integrate with the validation and error handling system. Users are assigned one of three roles with different permission levels:
+
+### Role Definitions
+```typescript
+export const USER_ROLES = {
+  admin: 'admin',    // Full access + user management
+  editor: 'editor',  // Read, write, delete operations
+  user: 'user',      // Own content only
+} as const;
+```
+
+**Permission Structure:**
+- **Global permissions** (`read:all`, `write:all`, `delete:all`) - Access to all documents
+- **Ownership permissions** (`read:own`, `write:own`, `delete:own`) - Access to user's own documents only
+- **Management permissions** (`manage:users`, `manage:settings`) - Administrative operations
+
+### Access Validation
+Role validation occurs at two levels:
+
+**Route-Level Authorization:**
+```typescript
+// Middleware checks basic permission requirements
+router.patch('/:id', 
+  authenticateToken,           // Verify JWT
+  requireResourceAccess('write'), // Check write permissions
+  updateController.one
+);
+```
+
+**Document-Level Authorization:**
+```typescript
+// Controllers validate specific document access
+const hasGlobalWrite = hasPermission(user.role, 'write:all');
+validateDocumentAccess(user, document, 'update', hasGlobalWrite);
+```
+
 ## Input Sanitization
 
 All text inputs are sanitized and normalized for data consistency:
@@ -321,6 +360,17 @@ INVALID_CREDENTIALS         - Login credentials incorrect
 USER_CREATION_FAILED        - Database user creation failed
 ```
 
+### Role & Permission Errors
+```
+INSUFFICIENT_PERMISSIONS    - User lacks required permissions for operation
+INSUFFICIENT_ROLE          - User role doesn't meet minimum requirements  
+SELF_ROLE_CHANGE_DENIED    - Users cannot modify their own role
+MISSING_USER_DATA          - User info missing after authentication
+INVALID_ROLE               - Invalid role specified in role update
+MISSING_USER_ID            - User ID not provided for role operations
+INVALID_USER_ID_FORMAT     - User ID format invalid for role operations
+```
+
 ### System Errors
 ```
 ROUTE_NOT_FOUND             - Invalid API endpoint
@@ -392,6 +442,20 @@ case 'TokenExpiredError':
 }
 ```
 
+### Permission Error
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Access denied: insufficient permissions to delete all documents",
+    "statusCode": 403,
+    "errorCode": "INSUFFICIENT_PERMISSIONS",
+    "timestamp": "2024-01-15T10:30:45.123Z",
+    "path": "/api/users"
+  }
+}
+```
+
 ### Database Error
 ```json
 {
@@ -423,18 +487,7 @@ case 'TokenExpiredError':
 ## Development vs Production
 
 In development environments, error responses include a `stack` property with the full error stack trace. This is automatically removed in production to avoid exposing internal system details.
-```json
-{
-  "success": false,
-  "error": {
-    "message": "Collection name is required",
-    "statusCode": 400,
-    "errorCode": "MISSING_COLLECTION",
-    "timestamp": "2024-01-15T10:30:45.123Z",
-    "path": "/api/users"
-  }
-}
-```
+
 # Usage Examples
 
 ## Client-Side Error Handling
@@ -535,6 +588,28 @@ async function loginUser(username, password) {
       throw new Error('Username or password is incorrect');
     } else if (errorCode === 'MISSING_AUTH_HEADER') {
       throw new Error('Authorization required');
+    }
+    
+    throw error;
+  }
+}
+```
+
+### Handling Permission Errors
+```javascript
+// Example: User tries to delete all documents but only has 'user' role
+// Returns: INSUFFICIENT_PERMISSIONS with 403 status
+
+async function deleteAllUsers() {
+  try {
+    return await client.deleteAll('users');
+  } catch (error) {
+    const { errorCode, statusCode } = error.response?.data?.error || {};
+    
+    if (errorCode === 'INSUFFICIENT_PERMISSIONS' && statusCode === 403) {
+      throw new Error('You do not have permission to delete all users');
+    } else if (errorCode === 'INSUFFICIENT_ROLE') {
+      throw new Error('Your user role does not allow this operation');
     }
     
     throw error;
