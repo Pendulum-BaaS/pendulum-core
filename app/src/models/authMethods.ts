@@ -48,7 +48,7 @@ export const loginUser = async (
   return result;
 };
 
-export const updateUserRole = async (
+export const updateRole = async (
   userId: string,
   newRole: UserRole,
 ): Promise<boolean> => {

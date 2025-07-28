@@ -214,3 +214,45 @@ export const removeAll = async (collectionName: string): Promise<any> => {
   await client.close();
   return documentsToDelete;
 };
+
+export const getSomeWithOwnership = async (
+  collectionName: string,
+  userId: string,
+  limit: number = 10,
+  offset: number = 0,
+  sortKey: SortKey = { _id: -1 }
+): Promise<PaginatedResult> => {
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection(collectionName);
+
+  const filter = { userId };
+  const data = await collection
+    .find(filter)
+    .sort(sortKey)
+    .limit(limit)
+    .skip(offset * limit)
+    .toArray();
+
+  const totalDocuments = await collection.countDocuments(filter);
+
+  await client.close();
+  return { data, totalDocuments, limit, offset };
+};
+
+export const getAllWithOwnership = async (
+  collectionName: string,
+  userId: string,
+): Promise<mongo.Document[]> => {
+  const client = new mongo.MongoClient(process.env.MONGO_URL as string);
+  await client.connect();
+  const db = client.db(process.env.DB_NAME);
+  const collection = db.collection(collectionName);
+
+  const filter = { userId };
+  const items = await collection.find(filter).toArray();
+
+  await client.close();
+  return items;
+};
