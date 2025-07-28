@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { login, register, logout, updateUserRole, getCurrentUser } from "../controllers/auth";
 import * as authValidation from "../middleware/errorHandlingAndValidation/validation/authValidation";
-import { authenticateToken, requireManagementAccess } from "../middleware/roleAuth";
+import { authenticateToken, requireManagementAccess } from "../middleware/rbac/roleAuth";
 
 const router = Router();
 
