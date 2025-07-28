@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { replace, getOne } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
-import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { hasPermission } from "../models/roleDefinitions";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 import { getAuthenticatedUser, validateDocumentAccess } from "../utils/auth";

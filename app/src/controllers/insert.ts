@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { insert } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
-import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { getAuthenticatedUser, permissionChecker } from "../utils/auth";
 
 export const insertController = async (

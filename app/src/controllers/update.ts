@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { getOne, updateOne, updateSome, updateAll } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
-import { AuthenticatedRequest } from "../middleware/roleAuth";
-import { hasPermission } from "../models/roleDefinitions";
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 import { getAuthenticatedUser, validateDocumentAccess, permissionChecker } from "../utils/auth";
+import { hasPermission } from "../models/roleDefinitions";
 
 export const one = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const id = req.params.id;

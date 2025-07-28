@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
-import { UserRole, USER_ROLES, hasPermission } from "../models/roleDefinitions";
-import { createError } from "./errorHandlingAndValidation/errorHandler";
+import { UserRole, USER_ROLES, hasPermission } from "../../models/roleDefinitions";
+import { createError } from "../errorHandlingAndValidation/errorHandler";
 
 export interface AuthenticatedRequest extends Request {
   user?: {

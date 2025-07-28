@@ -1,4 +1,4 @@
-import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 import { UserRole, hasPermission } from "../models/roleDefinitions";
 

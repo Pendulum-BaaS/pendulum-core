@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { removeOne, removeSome, removeAll, getOne } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
-import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { hasPermission } from "../models/roleDefinitions";
 import { getAuthenticatedUser, validateDocumentAccess } from "../utils/auth";
 

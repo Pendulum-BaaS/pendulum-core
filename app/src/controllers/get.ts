@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthenticatedRequest } from '../middleware/roleAuth';
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { hasPermission } from '../models/roleDefinitions';
 import { createError } from '../middleware/errorHandlingAndValidation/errorHandler';
 import { getAuthenticatedUser, validateDocumentAccess, permissionChecker } from "../utils/auth";

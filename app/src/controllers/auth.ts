@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { addUser, loginUser, updateRole } from "../models/authMethods";
 import { User } from "../models/authMethods";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
-import { AuthenticatedRequest } from "../middleware/roleAuth";
+import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { UserRole, USER_ROLES } from "../models/roleDefinitions";
 import { getAuthenticatedUser } from "../utils/auth";
 import jwt from "jsonwebtoken";
