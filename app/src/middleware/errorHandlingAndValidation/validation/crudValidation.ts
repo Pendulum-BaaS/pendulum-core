@@ -74,6 +74,16 @@ const invalidUpdateFormatHandler = () => {
   );
 };
 
+const getAndValidateCollection = (req: Request): string => {
+  const collection = req.query.collection || req.body.collection;
+  if (!collection) missingCollectionNameHandler();
+
+  const sanitizedCollection = String(collection).trim();
+  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+
+  return sanitizedCollection;
+};
+
 // GET validation
 export const validateGetOne = (
   req: Request,
@@ -84,13 +94,9 @@ export const validateGetOne = (
   const { collection } = req.query;
 
   if (!id) missingIdHandler();
-  if (!collection) missingCollectionNameHandler();
-
   const sanitizedId = String(id).trim();
-  const sanitizedCollection = String(collection).trim();
-
+  const sanitizedCollection = getAndValidateCollection(req);
   if (!isValidMongoId(sanitizedId)) invalidIdFormatHandler();
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
 
   req.params.id = sanitizedId;
   req.query.collection = sanitizedCollection;
@@ -103,12 +109,7 @@ export const validateGetSome = (
   next: NextFunction,
 ): void => {
   const { collection, limit, offset, sortKey } = req.query;
-
-  if (!collection) missingCollectionNameHandler();
-
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   //   // Validate limit (optional, defaults to 5 in controller)
   // let sanitizedLimit = 5;
@@ -150,11 +151,7 @@ export const validateGetAll = (
 ): void => {
   const { collection } = req.query;
 
-  if (!collection) missingCollectionNameHandler();
-
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   req.query.collection = sanitizedCollection;
   next();
@@ -167,16 +164,12 @@ export const validateInsert = ( // ADD CHECK TO MAKE SURE
   next: NextFunction,
 ): void => {
   const { collection, newItems } = req.body;
-
-  if (!collection) missingCollectionNameHandler();
   if (!newItems) throw createError.badRequest(
     'New items are required',
     'MISSING_NEW_ITEMS'
   );
 
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   if (!Array.isArray(newItems) && !isNonEmptyObject(newItems)) {
     throw createError.badRequest(
@@ -213,14 +206,12 @@ export const validateUpdateOne = (
   const { collection, updateOperation } = req.body;
 
   if (!id) missingIdHandler();
-  if (!collection) missingCollectionNameHandler();
   if (!updateOperation) missingUpdateOperationHandler();
 
   const sanitizedId = String(id).trim();
-  const sanitizedCollection = String(collection).trim();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   if (!isValidMongoId(sanitizedId)) invalidIdFormatHandler();
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
   if (!isNonEmptyObject(updateOperation)) invalidUpdateFormatHandler();
 
   req.params.id = sanitizedId;
@@ -234,17 +225,13 @@ export const validateUpdateSome = (
   next: NextFunction,
 ): void => {
   const { collection, filter, updateOperation } = req.body;
-
-  if (!collection) missingCollectionNameHandler();
   if (!filter) throw createError.badRequest(
     'Filter is required',
     'MISSING_FILTER'
   );
   if (!updateOperation) missingUpdateOperationHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
 
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
   if (!isNonEmptyObject(filter)) throw createError.badRequest(
     'Filter must be a non-empty object',
     'INVALID_FILTER'
@@ -261,13 +248,9 @@ export const validateUpdateAll = (
   next: NextFunction,
 ): void => {
   const { collection, updateOperation } = req.body;
-
-  if (!collection) missingCollectionNameHandler();
   if (!updateOperation) missingUpdateOperationHandler();
 
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
   if (!isNonEmptyObject(updateOperation)) invalidUpdateFormatHandler();
 
   req.body.collection = sanitizedCollection;
@@ -284,17 +267,15 @@ export const validateReplace = (
   const { collection, newItem } = req.body;
 
   if (!id) missingIdHandler();
-  if (!collection) missingCollectionNameHandler();
   if (!newItem) throw createError.badRequest(
     'New item is required',
     'MISSING_NEW_ITEM'
   );
 
   const sanitizedId = String(id).trim();
-  const sanitizedCollection = String(collection).trim();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   if (!isValidMongoId(sanitizedId)) invalidIdFormatHandler();
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
   if (!isNonEmptyObject(newItem)) throw createError.badRequest(
     'New item must be a non-empty object',
     'INVALID_NEW_ITEM'
@@ -315,13 +296,10 @@ export const validateDeleteOne = (
   const { collection } = req.query;
 
   if (!id) missingIdHandler();
-  if (!collection) missingCollectionNameHandler();
-
   const sanitizedId = String(id).trim();
-  const sanitizedCollection = String(collection).trim();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   if (!isValidMongoId(sanitizedId)) invalidIdFormatHandler();
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
 
   req.params.id = sanitizedId;
   req.query.collection = sanitizedCollection;
@@ -335,11 +313,7 @@ export const validateDeleteSome = (
 ): void => {
   const { collection, ...filterParams } = req.query;
 
-  if (!collection) missingCollectionNameHandler();
-
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   // check for filter parameters besides collection for safety
   if (Object.keys(filterParams).length === 0) throw createError.badRequest(
@@ -358,11 +332,7 @@ export const validateDeleteAll = (
 ): void => {
   const { collection, confirm } = req.query;
 
-  if (!collection) missingCollectionNameHandler();
-
-  const sanitizedCollection = String(collection).trim();
-
-  if (!isValidCollectionName(sanitizedCollection)) invalidCollectionNameHandler();
+  const sanitizedCollection = getAndValidateCollection(req);
 
   // require confirmation for safety
   if (confirm !== 'true') throw createError.badRequest(

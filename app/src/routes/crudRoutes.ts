@@ -34,7 +34,7 @@ router.get('/', // get all
 // create operations
 router.post('/', // insert one
   authenticateToken,
-  requireResourceAccess('write'),
+  requireResourceAccess('create'),
   crudValidation.validateInsert,
   insertController
 );
@@ -42,21 +42,21 @@ router.post('/', // insert one
 // update operations
 router.patch('/:id', // update one
   authenticateToken,
-  requireResourceAccess('write'),
+  requireResourceAccess('update'),
   crudValidation.validateUpdateOne,
   updateController.one
 );
 
 router.patch('/some',// update some
   authenticateToken,
-  requireResourceAccess('write'),
+  requireResourceAccess('update'),
   crudValidation.validateUpdateSome,
   updateController.some
 );
 
 router.patch('/', // update all
   authenticateToken,
-  requireResourceAccess('write'),
+  requireResourceAccess('update'),
   crudValidation.validateUpdateAll,
   updateController.all
 );
@@ -64,7 +64,7 @@ router.patch('/', // update all
 // replace operations
 router.put('/:id', // replace one
   authenticateToken,
-  requireResourceAccess('write'),
+  requireResourceAccess('update'),
   crudValidation.validateReplace,
   replaceController
 );
