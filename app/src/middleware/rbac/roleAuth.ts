@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
 import { UserRole, USER_ROLES } from "../../models/roleDefinitions";
 import { createError } from "../errorHandlingAndValidation/errorHandler";
-import { CollectionsManager, CollectionPermissions } from "../../models/collections";
+import { CollectionsManager, CollectionPermissions, collectionsManager } from "../../models/collections";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -19,8 +19,6 @@ const getCollectionName = (req: Request): string => {
 
   return String(collectionName);
 };
-
-const collectionManager = new CollectionsManager(); // singleton instance
 
 export const authenticateToken = (
   req: AuthenticatedRequest,
@@ -71,11 +69,11 @@ export const requireResourceAccess = (action: keyof CollectionPermissions) => {
       const collectionName = getCollectionName(req);
 
       // create collection if it doesn't exist MAKE SURE WE WANT THIS!!!!!!!!!!
-      if (!(await collectionManager.collectionExists(collectionName))) {
-        await collectionManager.createCollection(collectionName, user.userId);
+      if (!(await collectionsManager.collectionExists(collectionName))) {
+        await collectionsManager.createCollection(collectionName, user.userId);
       }
 
-      const hasPermission = await collectionManager.canPerformAction(
+      const hasPermission = await collectionsManager.canPerformAction(
         user.userId,
         user.role,
         collectionName,
