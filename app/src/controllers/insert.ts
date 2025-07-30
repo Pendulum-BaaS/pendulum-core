@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { insert } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
 import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
-import { getAuthenticatedUser, permissionChecker } from "../utils/auth";
+import { getAuthenticatedUser } from "../utils/auth";
 
 export const insertController = async (
   req: AuthenticatedRequest,
@@ -13,8 +13,6 @@ export const insertController = async (
 
   try {
     const user = getAuthenticatedUser(req);
-    permissionChecker.create(user);
-
     const itemsToInsert = Array.isArray(newItems) ? newItems : [newItems];
     const formattedItems = itemsToInsert.map(item => ({
       ...item,

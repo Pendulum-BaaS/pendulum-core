@@ -1,15 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
-import { hasPermission } from '../models/roleDefinitions';
 import { createError } from '../middleware/errorHandlingAndValidation/errorHandler';
-import { getAuthenticatedUser, validateDocumentAccess, permissionChecker } from "../utils/auth";
-import {
-  getOne,
-  getSome,
-  getAll,
-  getSomeWithOwnership,
-  getAllWithOwnership
-} from '../models/dbmethods';
+import { getOne, getSome, getAll } from '../models/dbmethods';
 
 const formatSortKey = (sortFields: string): Record<string, -1 | 1> => {
   const fields = sortFields.split(',');
@@ -32,16 +24,11 @@ export const one = async (req: AuthenticatedRequest, res: Response, next: NextFu
   const collection = String(req.query.collection); // validated and sanitized in middleware
 
   try {
-    const user = getAuthenticatedUser(req); // verify user logged in
     const result = await getOne(collection, id);
 
     if (!result || result.length === 0) {
       throw createError.notFound('Document not found', 'DOCUMENT_NOT_FOUND');
     }
-
-    const document = result[0];
-    const hasGlobalRead = hasPermission(user.role, 'read:all');
-    validateDocumentAccess(user, document, 'read', hasGlobalRead); // check user permission
 
     res.json(result);
   } catch(error) {
@@ -53,20 +40,10 @@ export const some = async (req: AuthenticatedRequest, res: Response, next: NextF
   const { collection, limit, offset, sortKey } = req.query as { [key: string]: string }; // collection validated and sanitized in middleware
 
   try {
-    const user = getAuthenticatedUser(req);
     const parsedLimit = limit ? Number(limit) : 5;
     const parsedOffset = offset ? Number(offset) : 0;
     const parsedSortKey: Record<string, 1 | -1> = sortKey ? formatSortKey(sortKey) : { _id: -1 };
-
-    let result;
-
-    if (hasPermission(user.role, 'read:all')) {
-      result = await getSome(collection, parsedLimit, parsedOffset, parsedSortKey);
-    } else if (hasPermission(user.role, 'read:own')) {
-      result = await getSomeWithOwnership(collection, user.userId, parsedLimit, parsedOffset, parsedSortKey);
-    } else {
-      permissionChecker.read(user);
-    }
+    const result = await getSome(collection, parsedLimit, parsedOffset, parsedSortKey);
 
     res.json(result);
   } catch(error) {
@@ -78,17 +55,7 @@ export const all = async (req: AuthenticatedRequest, res: Response, next: NextFu
   const collection = String(req.query.collection); // validated and sanitized in middleware
   
   try {
-    const user = getAuthenticatedUser(req);
-
-    let result;
-
-    if (hasPermission(user.role, 'read:all')) {
-      result = await getAll(collection);
-    } else if (hasPermission(user.role, 'read:own')) {
-      result = await getAllWithOwnership(collection, user.userId);
-    } else {
-      permissionChecker.read(user);
-    }
+    const result = await getAll(collection);
 
     res.json(result);
   } catch (error) {
