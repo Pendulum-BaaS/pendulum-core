@@ -78,17 +78,6 @@ export const login = async (
       { expiresIn: "24h" },
     );
 
-    res.cookie(
-      "token",
-      token,
-      {
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      }
-    );
-
     res.status(200).json({
       success: true,
       user: {
@@ -110,8 +99,7 @@ export const logout = async ( // no throw error because nothing can throw an err
   next: NextFunction,
 ) => {
   try {
-    res.clearCookie("token");
-    res.status(200).json({
+    res.status(200).json({ // The client should discard the token
       success: true,
       message: 'successfully logged out',
     });
