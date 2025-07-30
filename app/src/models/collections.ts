@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-interface CollectionPermissions {
+export interface CollectionPermissions {
   create: UserRole[];
   read: UserRole[];
   update: UserRole[];
@@ -21,6 +21,7 @@ interface CollectionMetadata {
 export class CollectionsManager {
   private collections: { [key: string]: CollectionMetadata } = {};
   private readonly COLLECTION_METADATA = 'collection_metadata'; // Need this as a constant???
+  private initPromise: Promise<void> | null = null; // Lazy initialization with Promise caching
   private defaultPermissions: CollectionPermissions = {
     create: ['admin', 'user', 'public'],
     read: ['admin', 'user', 'public'],
@@ -28,8 +29,9 @@ export class CollectionsManager {
     delete: ['admin', 'user', 'public'],
   };
 
-  constructor() {
-    this.loadCollectionsFromDb();
+  private async ensureInitialized(): Promise<void> { // Lazy initialization with Promise caching
+    if (!this.initPromise) this.initPromise = this.loadCollectionsFromDb();
+    await this.initPromise;
   }
 
   private async loadCollectionsFromDb(): Promise<void> {
@@ -58,6 +60,8 @@ export class CollectionsManager {
     createdBy: string,
     permissions?: Partial<CollectionPermissions>
   ): Promise<CollectionMetadata> {
+    await this.ensureInitialized();
+
     if (collectionName in this.collections) {
       throw new Error(`Collection ${collectionName} already exists`); // USE CUSTOM ERROR CLASS
     }
@@ -83,29 +87,35 @@ export class CollectionsManager {
     return collectionMetadata;
   };
 
-  canPerformAction(
+  async canPerformAction(
     userId: string,
     userRole: UserRole,
     collectionName: string,
     action: keyof CollectionPermissions
-  ): boolean {
+  ): Promise<boolean> {
+    await this.ensureInitialized();
+
     const collection = this.collections[collectionName];
     if (!collection) throw new Error(`Collection ${collectionName} does not exist`); // USE CUSTOM ERROR CLASS
 
     const roleAllowed = collection.permissions[action].includes(userRole);
-    const isCreator = this.isCollectionCreator(userId, collectionName);
+    const isCreator = await this.isCollectionCreator(userId, collectionName);
     
     return roleAllowed || isCreator;
   }
 
-  isCollectionCreator(userId: string, collectionName: string): boolean {
+  async isCollectionCreator(userId: string, collectionName: string): Promise<boolean> {
+    await this.ensureInitialized();
+
     const collection = this.collections[collectionName];
     if (!collection) throw new Error(`Collection ${collectionName} does not exist`);
 
     return collection.createdBy === userId;
   }
 
-  getCollectionPermissions(collectionName: string): CollectionPermissions {
+  async getCollectionPermissions(collectionName: string): Promise<CollectionPermissions> {
+    await this.ensureInitialized();
+
     const collection = this.collections[collectionName];
     if (!collection) throw new Error(`Collection ${collectionName} does not exist`);
 
@@ -116,6 +126,8 @@ export class CollectionsManager {
     collectionName: string,
     newPermissions: Partial<CollectionPermissions>
   ): Promise<boolean> {
+    await this.ensureInitialized();
+
     const collection = this.collections[collectionName];
     if (!collection) throw new Error(`Collection ${collectionName} does not exist`);
 
@@ -136,11 +148,13 @@ export class CollectionsManager {
     }
   }
 
-  getAllCollections(): CollectionMetadata[] {
+  async getAllCollections(): Promise<CollectionMetadata[]> {
+    await this.ensureInitialized();
     return Object.values(this.collections);
   }
 
-  collectionExists(collectionName: string): boolean {
+  async collectionExists(collectionName: string): Promise<boolean> {
+    await this.ensureInitialized();
     return collectionName in this.collections;
   }
 }
