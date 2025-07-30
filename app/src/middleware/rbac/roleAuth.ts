@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
-import { UserRole, USER_ROLES, hasPermission } from "../../models/roleDefinitions";
+import { UserRole, USER_ROLES } from "../../models/roleDefinitions";
 import { createError } from "../errorHandlingAndValidation/errorHandler";
+import { CollectionsManager, CollectionPermissions } from "../../models/collections";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -9,6 +10,17 @@ export interface AuthenticatedRequest extends Request {
     role: UserRole;
   };
 }
+
+const getCollectionName = (req: Request): string => {
+  const collectionName = req.query.collection || req.body.collection;
+  if (!collectionName) {
+    throw createError.badRequest('Collection name is required', 'MISSING_COLLECTION');
+  }
+
+  return String(collectionName);
+};
+
+const collectionManager = new CollectionsManager(); // singleton instance
 
 export const authenticateToken = (
   req: AuthenticatedRequest,
@@ -47,58 +59,61 @@ export const requireRole = (...allowedRoles: UserRole[]) => {
   };
 };
 
-export const requirePermission = (permission: string) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      throw createError.internal('User info not found after authentication', 'MISSING_USER_DATA');
-    }
-
-    if (!hasPermission(req.user.role, permission)) throw createError.forbidden(
-      `Insufficient permissions, required: ${permission}`,
-      'INSUFFICIENT_PERMISSIONS'
-    );
-
-    next();
-  };
-};
-
-export const requireResourceAccess = (action: 'read' | 'write' | 'delete') => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const requireResourceAccess = (action: keyof CollectionPermissions) => {
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     const user = req.user;
-    if (!user) {
-      throw createError.internal('User info not found after authentication', 'MISSING_USER_DATA');
-    }
-
-    if (hasPermission(user.role, `${action}:all`)) {
-      next();
-      return;
-    }
-
-    if (hasPermission(user.role, `${action}:own`)) {
-      next();
-      return;
-    }
-
-    throw createError.forbidden(
-      `Insufficient permissions for ${action} operation`,
-      'INSUFFICIENT_PERMISSIONS'
+    if (!user) throw createError.internal(
+      'User info not found after authentication',
+      'MISSING_USER_DATA'
     );
-  };
-};
 
-export const requireManagementAccess = (resource: 'users' | 'settings') => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      throw createError.internal('User info not found after authentication', 'MISSING_USER_DATA');
-    }
+    try {
+      const collectionName = getCollectionName(req);
 
-    if (!hasPermission(req.user.role, `manage:${resource}`)) {
-      throw createError.forbidden(
-        `Insufficient permissions to manage ${resource}`,
+      // create collection if it doesn't exist MAKE SURE WE WANT THIS!!!!!!!!!!
+      if (!(await collectionManager.collectionExists(collectionName))) {
+        await collectionManager.createCollection(collectionName, user.userId);
+      }
+
+      const hasPermission = await collectionManager.canPerformAction(
+        user.userId,
+        user.role,
+        collectionName,
+        action
+      );
+
+      if (!hasPermission) throw createError.forbidden(
+        `Insufficient permissions for ${action} operation on collection ${collectionName}`,
         'INSUFFICIENT_PERMISSIONS'
       );
-    }
 
-    next();
+      next();
+    } catch (error: any) {
+      if (error.statusCode) throw error;
+      if (error.message?.includes('does not exist')) {
+        throw createError.notFound(error.message, 'COLLECTION_NOT_FOUND');
+      }
+
+      throw createError.internal('Permission check failed', 'PERMISSION_CHECK_ERROR');
+    };
   };
 };
+
+export const requireAdmin = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!req.user) throw createError.internal(
+    'User info not found after authentication',
+    'MISSING_USER_DATA'
+  );
+
+  if (req.user.role !== USER_ROLES.admin) throw createError.forbidden(
+    'Access denied: admin privileges required',
+    'INSUFFICIENT_ROLE'
+  );
+
+  next();
+}
+

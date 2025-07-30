@@ -11,13 +11,13 @@ const app = express();
 
 app.use(express.json());
 
-// Routes
-app.use("/api", crudRoutes);
-app.use("/auth", authRoutes);
-
 app.get("/health", (req: Request, res: Response) => {
   res.sendStatus(200);
 });
+
+// Routes
+app.use("/api", crudRoutes);
+app.use("/auth", authRoutes);
 
 app.use(notFoundHandler); // 404 handler for invalid routes
 app.use(errorHandler); // global error handler

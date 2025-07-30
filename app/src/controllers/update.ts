@@ -3,8 +3,7 @@ import { getOne, updateOne, updateSome, updateAll } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
 import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
-import { getAuthenticatedUser, validateDocumentAccess, permissionChecker } from "../utils/auth";
-import { hasPermission } from "../models/roleDefinitions";
+import { getAuthenticatedUser } from "../utils/auth";
 
 export const one = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const id = req.params.id;
@@ -17,11 +16,6 @@ export const one = async (req: AuthenticatedRequest, res: Response, next: NextFu
     if (!existingDoc || existingDoc.length === 0) {
       throw createError.notFound('Document not found', 'DOCUMENT_NOT_FOUND');
     }
-
-    const doc = existingDoc[0];
-    const hasGlobalWrite = hasPermission(user.role, 'write:all');
-
-    validateDocumentAccess(user, doc, 'update', hasGlobalWrite); // check permissions for this doc
 
     const formattedOperation = {
       ...updateOperation,
@@ -51,13 +45,6 @@ export const some = async (req: AuthenticatedRequest, res: Response, next: NextF
   try {
     const user = getAuthenticatedUser(req);
 
-    if (!hasPermission(user.role, 'write:all')) { // manual check for bulk operations
-      throw createError.forbidden(
-        'Access denied: insufficient permissions to update multiple documents',
-        'INSUFFICIENT_PERMISSIONS'
-      );
-    }
-
     const formattedOperation = {
       ...updateOperation,
       $set: {
@@ -80,13 +67,6 @@ export const all = async (req: AuthenticatedRequest, res: Response, next: NextFu
 
   try {
     const user = getAuthenticatedUser(req);
-
-    if (!hasPermission(user.role, 'write:all')) { // manual check for bulk operations
-      throw createError.forbidden(
-        'Access denied: insufficient permissions to update all documents',
-        'INSUFFICIENT_PERMISSIONS'
-      );
-    }
 
     const formattedOperation = {
       ...updateOperation,

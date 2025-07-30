@@ -3,8 +3,7 @@ import { removeOne, removeSome, removeAll, getOne } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
-import { hasPermission } from "../models/roleDefinitions";
-import { getAuthenticatedUser, validateDocumentAccess } from "../utils/auth";
+import { getAuthenticatedUser } from "../utils/auth";
 
 
 export const one = async (
@@ -16,15 +15,10 @@ export const one = async (
   const collection = String(req.query.collection);
 
   try {
-    const user = getAuthenticatedUser(req);
     const existingDoc = await getOne(collection, id);
     if (!existingDoc || existingDoc.length === 0) {
       throw createError.notFound('Document not found', 'DOCUMENT_NOT_FOUND');
     }
-
-    const doc = existingDoc[0];
-    const hasGlobalDelete = hasPermission(user.role, 'delete:all');
-    validateDocumentAccess(user, doc, 'delete', hasGlobalDelete); // check permissions for this doc
 
     const result = await removeOne(collection, id);
     if (!result) throw createError.notFound(
@@ -93,15 +87,6 @@ export const some = async (
   const sanitizedCollection = collection as string;
 
   try {
-    const user = getAuthenticatedUser(req);
-
-    if (!hasPermission(user.role, 'delete:all')) {
-      throw createError.forbidden(
-        'Access denied: insufficient permissions to delete multiple documents',
-        'INSUFFICIENT_PERMISSIONS'
-      );
-    }
-
     const formattedFilter = formatFilter(filterParams);
     const result = await removeSome(sanitizedCollection, formattedFilter);
     eventClient.emitDelete(sanitizedCollection, formattedFilter, result);
@@ -119,15 +104,6 @@ export const all = async (
   const collection = String(req.query.collection);
 
   try {
-    const user = getAuthenticatedUser(req);
-
-    if (!hasPermission(user.role, 'delete:all')) {
-      throw createError.forbidden(
-        'Access denied: insufficient permissions to delete all documents',
-        'INSUFFICIENT_PERMISSIONS'
-      );
-    }
-
     const filter = {};
     const result = await removeAll(collection);
     eventClient.emitDelete(collection, filter, result);
