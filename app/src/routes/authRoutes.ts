@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { login, register, logout, updateUserRole, getCurrentUser } from "../controllers/auth";
 import * as authValidation from "../middleware/errorHandlingAndValidation/validation/authValidation";
-import { authenticateToken, requireManagementAccess } from "../middleware/rbac/roleAuth";
+import { authenticateToken, requireAdmin } from "../middleware/rbac/roleAuth";
 
 const router = Router();
 
@@ -19,13 +19,13 @@ router.post("/logout", authenticateToken, logout);
 //admin routes, require auth + admin permission
 router.patch("/users/:userId/role",
   authenticateToken, //verify jwt token
-  requireManagementAccess('users'), // check management access
+  requireAdmin, // check admin access
   authValidation.validateRoleUpdate, // validate input
   updateUserRole // run controller (NEED TO MAKE)
 );
 
 // FUTURE ADMIN ROUTES
-// router.get("/users", authenticateToken, requireManagementAccess('users'), getAllUsers);
-// router.delete("/users/:userId", authenticateToken,  requireManagementAccess('users'), deleteUser);
+// router.get("/users", authenticateToken, requireAdmin, getAllUsers);
+// router.delete("/users/:userId", authenticateToken,  requireAdmin, deleteUser);
 
 export default router;
