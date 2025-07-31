@@ -1,6 +1,7 @@
 import express from "express";
 import crudRoutes from "./routes/crudRoutes";
 import authRoutes from "./routes/authRoutes";
+import collectionPermissionsRoutes from "./routes/collectionPermissionsRoutes";
 import { Request, Response, NextFunction } from "express";
 import {
   errorHandler,
@@ -18,6 +19,7 @@ app.get("/health", (req: Request, res: Response) => {
 // Routes
 app.use("/api", crudRoutes);
 app.use("/auth", authRoutes);
+app.use("/permissions", collectionPermissionsRoutes);
 
 app.use(notFoundHandler); // 404 handler for invalid routes
 app.use(errorHandler); // global error handler
