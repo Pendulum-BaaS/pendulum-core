@@ -165,9 +165,12 @@ export const removeOne = async (
 
 export const removeSome = async (
   collectionName: string,
-  filter: Record<string, any>,
+  ids: string,
 ): Promise<any> => {
-  if (Object.keys(filter).length === 0) return 0; // THROW ERROR INSTEAD OF RETURN 0
+  // one or more _id requirement handled by validation middleware
+  // ids is guaranteed to exist or 4XX response is sent
+  const parsedIds = ids.split(",").map((id) => new mongo.ObjectId(id.trim()));
+  const filter = { _id: { $in: parsedIds } };
 
   const db = mongoClient.db(process.env.DB_NAME);
   const collection = db.collection(collectionName);

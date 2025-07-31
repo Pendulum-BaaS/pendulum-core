@@ -104,7 +104,7 @@ const getAndValidateCollection = (req: Request): string => {
 // GET validation
 export const validateGetOne = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { id } = req.params;
@@ -121,7 +121,7 @@ export const validateGetOne = (
 
 export const validateGetSome = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const defaultLimit = 5;
@@ -172,7 +172,7 @@ export const validateGetSome = (
 
 export const validateGetAll = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const sanitizedCollection = getAndValidateCollection(req);
@@ -184,7 +184,7 @@ export const validateGetAll = (
 // POST validation
 export const validateInsert = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { newItems } = req.body;
@@ -221,7 +221,7 @@ export const validateInsert = (
 // PATCH validation
 export const validateUpdateOne = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { id } = req.params;
@@ -243,7 +243,7 @@ export const validateUpdateOne = (
 
 export const validateUpdateSome = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { filter, updateOperation } = req.body;
@@ -265,7 +265,7 @@ export const validateUpdateSome = (
 
 export const validateUpdateAll = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { updateOperation } = req.body;
@@ -281,7 +281,7 @@ export const validateUpdateAll = (
 // PUT validation
 export const validateReplace = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { id } = req.params;
@@ -309,7 +309,7 @@ export const validateReplace = (
 // DELETE validation
 export const validateDeleteOne = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const { id } = req.params;
@@ -327,19 +327,24 @@ export const validateDeleteOne = (
 
 export const validateDeleteSome = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
-  const { collection, ...filterParams } = req.query;
+  const { ids } = req.query;
 
   const sanitizedCollection = getAndValidateCollection(req);
 
-  // check for filter parameters besides collection for safety
-  if (Object.keys(filterParams).length === 0)
+  if (ids === undefined) {
     throw createError.badRequest(
-      "Filter parameters are required for deleting some items",
-      "MISSING_FILTER_PARAMS",
+      "One or more mongo _id values are required for deleting some records",
+      "MISSING_ID",
     );
+  } else if (!isValidIds(ids as string)) {
+    throw createError.badRequest(
+      "All ids must be valid mongo _id values",
+      "INVALID_ID_FORMAT",
+    );
+  }
 
   req.query.collection = sanitizedCollection;
   next();
@@ -347,7 +352,7 @@ export const validateDeleteSome = (
 
 export const validateDeleteAll = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   const sanitizedCollection = getAndValidateCollection(req);
