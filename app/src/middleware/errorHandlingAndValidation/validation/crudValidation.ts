@@ -20,6 +20,11 @@ const isValidMongoId = (id: string): boolean => {
   return typeof id === "string" && MONGODB_ID_REGEX.test(id);
 };
 
+const isValidIds = (ids: string): boolean => {
+  const idArr = ids.split(",");
+  return idArr.every(isValidMongoId);
+};
+
 const isValidLimit = (value: any): boolean => {
   const min = 1;
   const num = Number(value);
@@ -122,7 +127,7 @@ export const validateGetSome = (
   const defaultLimit = 5;
   const defaultOffset = 0;
 
-  const { limit, offset, sortKey } = req.query;
+  const { limit, offset, sortKey, ids } = req.query;
   const sanitizedCollection = getAndValidateCollection(req);
 
   if (limit !== undefined && !isValidLimit(limit)) {
@@ -138,11 +143,19 @@ export const validateGetSome = (
       "INVALID_OFFSET",
     );
   }
+
   if (sortKey !== undefined && !isNonEmptyString(sortKey))
     throw createError.badRequest(
       "Sort key must be a non-empty string",
       "INVALID_SORT_KEY",
     );
+
+  if (ids !== undefined && !isValidIds(ids as string)) {
+    throw createError.badRequest(
+      "All ids must be valid mongo _id values",
+      "INVALID_ID_FORMAT",
+    );
+  }
 
   const sanitizedLimit = isValidLimit(limit) ? Number(limit) : defaultLimit;
   const sanitizedOffset = isValidOffset(offset)

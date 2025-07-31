@@ -36,16 +36,24 @@ export const getSome = async (
   limit: number = 10,
   offset: number = 0,
   sortKey: SortKey = { _id: -1 },
+  ids: string = "",
 ): Promise<PaginatedResult> => {
   const db = mongoClient.db(process.env.DB_NAME);
   const collection = db.collection(collectionName);
+
+  let filter = {};
+  if (ids) {
+    const parsedIds = ids.split(",").map((id) => new mongo.ObjectId(id.trim()));
+    filter = { _id: { $in: parsedIds } };
+  }
+
   const data = await collection
-    .find({})
+    .find(filter)
     .sort(sortKey)
     .limit(limit)
     .skip(offset * limit)
     .toArray();
-  const totalDocuments = await collection.countDocuments();
+  const totalDocuments = await collection.countDocuments(filter);
 
   return { data, totalDocuments, limit, offset };
 };
@@ -183,7 +191,7 @@ export const getSomeWithOwnership = async (
   userId: string,
   limit: number = 10,
   offset: number = 0,
-  sortKey: SortKey = { _id: -1 }
+  sortKey: SortKey = { _id: -1 },
 ): Promise<PaginatedResult> => {
   const client = new mongo.MongoClient(process.env.MONGO_URL as string);
   await client.connect();
