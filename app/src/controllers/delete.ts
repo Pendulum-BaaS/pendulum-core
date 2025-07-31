@@ -5,11 +5,10 @@ import { createError } from "../middleware/errorHandlingAndValidation/errorHandl
 import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
 import { getAuthenticatedUser } from "../utils/auth";
 
-
 export const one = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const id = req.params.id;
   const collection = String(req.query.collection);
@@ -17,14 +16,15 @@ export const one = async (
   try {
     const existingDoc = await getOne(collection, id);
     if (!existingDoc || existingDoc.length === 0) {
-      throw createError.notFound('Document not found', 'DOCUMENT_NOT_FOUND');
+      throw createError.notFound("Document not found", "DOCUMENT_NOT_FOUND");
     }
 
     const result = await removeOne(collection, id);
-    if (!result) throw createError.notFound(
-      'Document not found or could not be deleted',
-      'DELETE_FAILED'
-    );
+    if (!result)
+      throw createError.notFound(
+        "Document not found or could not be deleted",
+        "DELETE_FAILED",
+      );
 
     eventClient.emitDelete(collection, { _id: id }, [result]);
     res.json(result);
@@ -33,63 +33,24 @@ export const one = async (
   }
 };
 
-const formatFilter = (query: Record<string, any>) => {
-  const filter: Record<string, any> = {};
-
-  Object.keys(query).forEach((key) => {
-    if (key.includes("[") && key.includes("]")) {
-      // Handle operators like price[gte]=100
-      const [field, operator] = key.split("[");
-      const op = operator.replace("]", "");
-
-      if (!filter[field]) filter[field] = {};
-
-      let value = query[key];
-
-      // Handle different operators
-      switch (op) {
-        case "gte":
-        case "gt":
-        case "lte":
-        case "lt":
-          filter[field][`$${op}`] = Number(value);
-          break;
-        case "in":
-        case "nin":
-          filter[field][`$${op}`] = value.split(",");
-          break;
-        case "regex":
-          filter[field].$regex = value;
-          filter[field].$options = "i"; // case insensitive
-          break;
-      }
-    } else {
-      // Direct field match
-      if (query[key] === "true") {
-        filter[key] = true;
-      } else if (query[key] === "false") {
-        filter[key] = false;
-      } else {
-        filter[key] = query[key];
-      }
-    }
-  });
-
-  return filter;
-};
-
 export const some = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  const { collection, ...filterParams } = req.query;
-  const sanitizedCollection = collection as string;
+  const collection = String(req.query.collection);
+  const ids = String(req.query.ids);
+  const parsedIds = ids.split(",").map((id) => id.trim());
 
   try {
-    const formattedFilter = formatFilter(filterParams);
-    const result = await removeSome(sanitizedCollection, formattedFilter);
-    eventClient.emitDelete(sanitizedCollection, formattedFilter, result);
+    const result = await removeSome(collection, ids);
+    eventClient.emitDelete(
+      collection,
+      {
+        _id: { $in: parsedIds },
+      },
+      result,
+    );
     res.json(result);
   } catch (error) {
     next(error);
@@ -99,7 +60,7 @@ export const some = async (
 export const all = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const collection = String(req.query.collection);
 
