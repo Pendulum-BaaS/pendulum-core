@@ -159,3 +159,4 @@ export class CollectionsManager {
   }
 }
 
+export const collectionsManager = new CollectionsManager(); // singleton instance
