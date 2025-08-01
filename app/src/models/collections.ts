@@ -75,6 +75,7 @@ export class CollectionsManager {
 
     try {
       const db = mongoClient.db(process.env.DB_NAME);
+      await db.createCollection(collectionName);
       const metadataCollection = db.collection(this.COLLECTION_METADATA);
       await metadataCollection.insertOne(collectionMetadata);
 
