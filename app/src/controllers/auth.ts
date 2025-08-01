@@ -29,7 +29,7 @@ export const register = async (
       username,
       email,
       password: hashedPw,
-      role: USER_ROLES.user,
+      role: USER_ROLES.user, // default role to user
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -159,6 +159,37 @@ export const getCurrentUser = async (
         userId: user.userId,
         role: user.role,
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const validateAdminKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const adminKey = req.body.adminKey;
+    if (!adminKey) {
+      throw createError.badRequest('Admin key is required', 'MISSING_ADMIN_KEY');
+    }
+
+    // Get admin key from environment (injected by ECS from Secrets Manager)
+    const validAdminKey = process.env.ADMIN_API_KEY;
+    if (!validAdminKey) {
+      throw createError.internal('Admin key not configured','ADMIN_KEY_NOT_CONFIGURED');
+      }
+
+    if (adminKey !== validAdminKey) {
+      throw createError.unauthorized('Invalid admin key', 'INVALID_ADMIN_KEY');
+    }
+
+    res.json({
+      success: true,
+      message: 'Admin key validated successfully',
+      role: 'admin',
     });
   } catch (error) {
     next(error);

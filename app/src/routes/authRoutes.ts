@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { login, register, logout, updateUserRole, getCurrentUser } from "../controllers/auth";
-import * as authValidation from "../middleware/errorHandlingAndValidation/validation/authValidation";
+import { login, register, logout, updateUserRole, getCurrentUser, validateAdminKey } from "../controllers/auth";
+import * as authValidation from "../middleware/errorHandlingAndValidation/validation/userValidation";
+import { validateAdminKeyRequest } from "../middleware/errorHandlingAndValidation/validation/adminValidation";
 import { authenticateToken, requireAdmin } from "../middleware/rbac/roleAuth";
 
 const router = Router();
@@ -8,6 +9,9 @@ const router = Router();
 // public routes, no auth required
 router.post("/register", authValidation.validateRegistration, register);
 router.post("/login", authValidation.validateLogin, login);
+
+// admin validation route for dashboard acces (no auth required)
+router.post("/admin/validate", validateAdminKeyRequest, validateAdminKey);
 
 // auth routes, require JWT token
 router.get("/me", authenticateToken, getCurrentUser);

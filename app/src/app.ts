@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import crudRoutes from "./routes/crudRoutes";
 import authRoutes from "./routes/authRoutes";
@@ -11,7 +12,16 @@ import {
 
 const app = express();
 
+app.use(cors({
+  origin: [
+    "http://localhost:5173", // use * in development?
+    "http://localhost:3000",
+  ],
+  credentials: true,
+}));
+
 app.use(express.json());
+
 
 // middleware and controller for logging to admin dashboard
 app.use(sseLoggerMiddleware);
