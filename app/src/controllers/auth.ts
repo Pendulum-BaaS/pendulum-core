@@ -62,7 +62,7 @@ export const login = async (
   try {
     const { identifier, password, isEmailLogin } = req.body;
 
-    const userInfo = await loginUser(identifier);
+    const userInfo = await loginUser(identifier, isEmailLogin);
     if (userInfo === null) return invalidCredentialsHandler();
 
     const pwMatch = await bcrypt.compare(password, userInfo.password);

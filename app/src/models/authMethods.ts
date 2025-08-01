@@ -33,11 +33,12 @@ export const addUser = async (userData: User): Promise<boolean> => {
 
 export const loginUser = async (
   identifier: string,
+  isEmailLogin: boolean,
 ): Promise<mongo.WithId<mongo.BSON.Document> | null> => {
   const db = mongoClient.db(process.env.DB_NAME);
   const collection = db.collection(COLLECTION_NAME);
 
-  const query = identifier.includes('@') ? { email: identifier } : { username: identifier };
+  const query = isEmailLogin ? { email: identifier } : { username: identifier };
   const result = await collection.findOne(query);
   return result;
 };
