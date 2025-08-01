@@ -25,6 +25,19 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ): void => {
+  // Dev mode, skip authorization
+  if (process.env.NODE_ENV !== 'production' || process.env.SKIP_ATH === 'true') {
+    const devToken = jwt.sign(
+      {
+        userId: 'dev-user',
+        role: 'admin',
+      },
+      process.env.JWT_SECRET as string, { expiresIn: "24h" }
+    );
+
+    req.headers.authorization = `Bearer ${devToken}`;
+  }
+
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1]; // optional chaining, returns undefined if authHeader is undefined
 
