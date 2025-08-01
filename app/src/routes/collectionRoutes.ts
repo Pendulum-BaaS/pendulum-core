@@ -38,4 +38,21 @@ collectionRouter.post(
   },
 );
 
+collectionRouter.get(
+  "/",
+  authenticateToken,
+  requireAdmin,
+  async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = await collectionsManager.getAllCollections();
+      const collections = result
+        .map((metadata) => metadata.collectionName)
+        .filter((col) => col !== "users");
+      res.send({ collections });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 export default collectionRouter;
