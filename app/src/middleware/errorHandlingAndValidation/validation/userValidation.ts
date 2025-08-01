@@ -46,7 +46,7 @@ export const validateRegistration = (
   if (!username) throw createError.badRequest('Username is required', 'MISSING_USERNAME');
 
   const sanitizedEmail = email.trim().toLowerCase();
-  const sanitizedUsername = username.trim();
+  const sanitizedUsername = username.trim().toLowerCase();
 
   if (!isValidEmail(sanitizedEmail)) throw createError.badRequest(
     'Invalid email format',
