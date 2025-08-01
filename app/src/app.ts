@@ -17,9 +17,9 @@ app.get("/health", (req: Request, res: Response) => {
 });
 
 // Routes
-app.use("/api", crudRoutes);
-app.use("/auth", authRoutes);
-app.use("/permissions", collectionPermissionsRoutes);
+app.use("/pendulum/api", crudRoutes);
+app.use("/pendulum/auth", authRoutes);
+app.use("/pendulum/permissions", collectionPermissionsRoutes);
 
 app.use(notFoundHandler); // 404 handler for invalid routes
 app.use(errorHandler); // global error handler

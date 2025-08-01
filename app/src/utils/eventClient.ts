@@ -18,7 +18,7 @@ export class EventClient {
     data: EventData,
   ) {
     try {
-      await axios.post(`${EVENTS_SERVICE_URL}/internal/emit`, {
+      await axios.post(`${EVENTS_SERVICE_URL}/pendulum-events/internal/emit`, {
         eventType,
         collection,
         data,

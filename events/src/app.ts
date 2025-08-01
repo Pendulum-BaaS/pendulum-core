@@ -9,10 +9,10 @@ export const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/internal", internalRouter);
-app.use("/events", sseRouter);
+app.use("/pendulum-events/internal", internalRouter);
+app.use("/pendulum-events/events", sseRouter);
 
-app.get("/health", (_req: Request, res: Response) => {
+app.get("/pendulum-events/health", (_req: Request, res: Response) => {
   res.json({
     status: "ok",
     clients: sseManager.getClientCount(),
