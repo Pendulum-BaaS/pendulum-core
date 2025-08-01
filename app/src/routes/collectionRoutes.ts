@@ -55,4 +55,29 @@ collectionRouter.get(
   },
 );
 
+collectionRouter.delete(
+  "/",
+  authenticateToken,
+  requireAdmin,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const collection = req.query.collection;
+
+      if (
+        !collection ||
+        typeof collection !== "string" ||
+        /\s+/.test(collection.trim())
+      ) {
+        throw new Error(`Invalid collection name: ${collection}`);
+      }
+      const result = await collectionsManager.deleteCollection(
+        collection.trim(),
+      );
+      res.send({ deleted: result });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
 export default collectionRouter;
