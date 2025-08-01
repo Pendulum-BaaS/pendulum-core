@@ -86,7 +86,29 @@ export class CollectionsManager {
     }
 
     return collectionMetadata;
-  };
+  }
+
+  async deleteCollection(collectionName: string): Promise<boolean> {
+    await this.ensureInitialized();
+
+    if (!(collectionName in this.collections)) {
+      throw new Error(`Collection ${collectionName} does not exist`);
+    }
+
+    try {
+      const db = mongoClient.db(process.env.DB_NAME);
+      await db.collection(collectionName).drop();
+      const metadataCollection = db.collection(this.COLLECTION_METADATA);
+      await metadataCollection.deleteOne({ collectionName: collectionName });
+
+      delete this.collections[collectionName];
+    } catch (error) {
+      console.error("Failed to delete collection:", error);
+      throw error;
+    }
+
+    return true;
+  }
 
   async canPerformAction(
     userId: string,
