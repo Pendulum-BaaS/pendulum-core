@@ -12,6 +12,7 @@ COPY app/tsconfig.json ./
 RUN npm ci
 
 COPY app/src/ ./src/
+COPY app/ui/ ./ui/
 
 # compile ts to js
 RUN npm run build

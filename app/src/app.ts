@@ -1,11 +1,12 @@
 import cors from "cors";
 import express from "express";
+import path from "path";
 import crudRoutes from "./routes/crudRoutes";
 import authRoutes from "./routes/authRoutes";
 import collectionRoutes from "./routes/collectionRoutes";
 import { sseLogsEndpoint, sseLoggerMiddleware } from "./middleware/logger";
 import collectionPermissionsRoutes from "./routes/collectionPermissionsRoutes";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, Router } from "express";
 import {
   errorHandler,
   notFoundHandler,
