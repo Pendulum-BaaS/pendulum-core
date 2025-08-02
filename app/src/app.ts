@@ -37,7 +37,30 @@ app.use("/pendulum/auth", authRoutes);
 app.use("/pendulum/permissions", collectionPermissionsRoutes);
 app.use("/pendulum/collections", collectionRoutes);
 
-app.use(notFoundHandler); // 404 handler for invalid routes
-app.use(errorHandler); // global error handler
+
+const uiPath = path.join(__dirname, "..", "..", "ui");
+
+const adminRouter = Router();
+
+adminRouter.use("/assets", express.static(path.join(uiPath, "assets")));
+
+adminRouter.use(express.static(uiPath));
+
+adminRouter.get(
+  ["/", "/data", "/logs", "/users"],
+  (req: Request, res: Response) => {
+    res.sendFile(path.join(uiPath, "index.html"));
+  },
+);
+
+app.get("/admin", (req: Request, res: Response) => {
+  res.sendFile(path.join(uiPath, "index.html"));
+});
+
+app.use("/admin", adminRouter);
+
+
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
