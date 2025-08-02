@@ -26,7 +26,7 @@ export const authenticateToken = (
   next: NextFunction
 ): void => {
   // Dev mode, skip authorization
-  if (process.env.NODE_ENV !== 'production' || process.env.SKIP_ATH === 'true') {
+  if (process.env.NODE_ENV !== "production") {
     const devToken = jwt.sign(
       {
         userId: 'dev-user',
