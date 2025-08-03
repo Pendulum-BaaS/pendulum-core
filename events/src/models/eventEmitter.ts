@@ -16,10 +16,11 @@ class DatabaseEventEmitter extends EventEmitter {
     });
   }
 
-  emitInsert(collection: string, insertedData: any[]) {
+  emitInsert(collection: string, insertedData: any[], operationId: string) {
     const event: DatabaseEvent = {
       collection,
       action: "insert",
+      operationId,
       eventData: {
         affected: insertedData,
         count: insertedData.length,
@@ -36,10 +37,12 @@ class DatabaseEventEmitter extends EventEmitter {
     filter: any,
     updatedData: any[],
     updateOperation: any,
+    operationId: string
   ) {
     const event: DatabaseEvent = {
       collection,
       action: "update",
+      operationId,
       eventData: {
         affected: updatedData,
         filter,
@@ -53,10 +56,11 @@ class DatabaseEventEmitter extends EventEmitter {
     this.emit(DB_EVENTS.UPDATE, event);
   }
 
-  emitDelete(collection: string, filter: any, deletedData: any[]) {
+  emitDelete(collection: string, filter: any, deletedData: any[], operationId: string) {
     const event: DatabaseEvent = {
       collection,
       action: "delete",
+      operationId,
       eventData: {
         affected: deletedData,
         filter,
