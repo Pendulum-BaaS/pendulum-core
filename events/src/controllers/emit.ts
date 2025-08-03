@@ -11,7 +11,7 @@ export const emitController = (req: Request, res: Response) => {
 
     switch (eventType) {
       case "insert":
-        eventEmitter.emitInsert(collection, data.insertedData);
+        eventEmitter.emitInsert(collection, data.insertedData, data.operationId);
         break;
       case "update":
         eventEmitter.emitUpdate(
@@ -19,10 +19,12 @@ export const emitController = (req: Request, res: Response) => {
           data.filter,
           data.updatedData,
           data.updateOperation,
+          data.operationId
         );
         break;
       case "delete":
-        eventEmitter.emitDelete(collection, data.filter, data.deletedData);
+        eventEmitter.emitDelete(collection, data.filter, data.deletedData, data.operationId);
+        break;
     }
 
     res.send({ success: true });
