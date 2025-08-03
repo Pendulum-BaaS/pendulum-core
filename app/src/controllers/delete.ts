@@ -3,7 +3,6 @@ import { removeOne, removeSome, removeAll, getOne } from "../models/dbmethods";
 import { eventClient } from "../utils/eventClient";
 import { createError } from "../middleware/errorHandlingAndValidation/errorHandler";
 import { AuthenticatedRequest } from "../middleware/rbac/roleAuth";
-import { getAuthenticatedUser } from "../utils/auth";
 
 export const one = async (
   req: AuthenticatedRequest,
@@ -12,6 +11,7 @@ export const one = async (
 ) => {
   const id = req.params.id;
   const collection = String(req.query.collection);
+  const operationId = String(req.query.operationId);
 
   try {
     const existingDoc = await getOne(collection, id);
@@ -26,7 +26,7 @@ export const one = async (
         "DELETE_FAILED",
       );
 
-    eventClient.emitDelete(collection, { _id: id }, [result]);
+    eventClient.emitDelete(collection, { _id: id }, [result], operationId);
     res.json(result);
   } catch (error) {
     next(error);
@@ -39,6 +39,7 @@ export const some = async (
   next: NextFunction,
 ) => {
   const collection = String(req.query.collection);
+  const operationId = String(req.query.operationId);
   const ids = String(req.query.ids);
   const parsedIds = ids.split(",").map((id) => id.trim());
 
@@ -50,6 +51,7 @@ export const some = async (
         _id: { $in: parsedIds },
       },
       result,
+      operationId
     );
     res.json(result);
   } catch (error) {
@@ -63,11 +65,12 @@ export const all = async (
   next: NextFunction,
 ) => {
   const collection = String(req.query.collection);
+  const operationId = String(req.query.operationId);
 
   try {
     const filter = {};
     const result = await removeAll(collection);
-    eventClient.emitDelete(collection, filter, result);
+    eventClient.emitDelete(collection, filter, result, operationId);
     res.json(result);
   } catch (error) {
     next(error);

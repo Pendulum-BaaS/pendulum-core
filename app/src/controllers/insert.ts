@@ -9,7 +9,7 @@ export const insertController = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { collection, newItems } = req.body;
+  const { collection, newItems, operationId } = req.body;
 
   try {
     const user = getAuthenticatedUser(req);
@@ -23,7 +23,7 @@ export const insertController = async (
     }));
 
     const result = await insert(collection, formattedItems);
-    eventClient.emitInsert(collection, result);
+    eventClient.emitInsert(collection, result, operationId);
     res.status(201).json(result);
   } catch (error) {
     next(error);

@@ -11,7 +11,7 @@ export const replaceController = async (
   next: NextFunction,
 ) => {
   const id = String(req.params.id);
-  const { collection, newItem } = req.body;
+  const { collection, newItem, operationId } = req.body;
 
   try {
     const user = getAuthenticatedUser(req);
@@ -39,7 +39,7 @@ export const replaceController = async (
     );
 
     const filter = { _id: id };
-    eventClient.emitUpdate(collection, filter, [result], { $set: formattedNewItem });
+    eventClient.emitUpdate(collection, filter, [result], { $set: formattedNewItem }, operationId);
     res.json(result);
   } catch (error) {
     next(error);
