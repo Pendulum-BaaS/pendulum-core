@@ -7,7 +7,7 @@ import { getAuthenticatedUser } from "../utils/auth";
 
 export const one = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const id = req.params.id;
-  const { collection, updateOperation } = req.body;
+  const { collection, updateOperation, operationId } = req.body;
 
   try {
     const user = getAuthenticatedUser(req);
@@ -32,7 +32,7 @@ export const one = async (req: AuthenticatedRequest, res: Response, next: NextFu
       'UPDATE_FAILED'
     );
 
-    eventClient.emitUpdate(collection, { _id: id }, [result], formattedOperation);
+    eventClient.emitUpdate(collection, { _id: id }, [result], formattedOperation, operationId);
     res.json(result);
   } catch (error) {
     next(error);
@@ -40,7 +40,7 @@ export const one = async (req: AuthenticatedRequest, res: Response, next: NextFu
 };
 
 export const some = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const { collection, filter, updateOperation } = req.body;
+  const { collection, filter, updateOperation, operationId } = req.body;
 
   try {
     const user = getAuthenticatedUser(req);
@@ -55,7 +55,7 @@ export const some = async (req: AuthenticatedRequest, res: Response, next: NextF
     };
 
     const result = await updateSome(collection, filter, formattedOperation);
-    eventClient.emitUpdate(collection, filter, result, formattedOperation);
+    eventClient.emitUpdate(collection, filter, result, formattedOperation, operationId);
     res.json(result);
   } catch (error) {
     next(error);
@@ -63,7 +63,7 @@ export const some = async (req: AuthenticatedRequest, res: Response, next: NextF
 };
 
 export const all = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const { collection, updateOperation } = req.body;
+  const { collection, updateOperation, operationId } = req.body;
 
   try {
     const user = getAuthenticatedUser(req);
@@ -79,7 +79,7 @@ export const all = async (req: AuthenticatedRequest, res: Response, next: NextFu
 
     const filter = {};
     const result = await updateAll(collection, formattedOperation);
-    eventClient.emitUpdate(collection, filter, result, formattedOperation);
+    eventClient.emitUpdate(collection, filter, result, formattedOperation, operationId);
     res.json(result);
   } catch (error) {
     next(error);

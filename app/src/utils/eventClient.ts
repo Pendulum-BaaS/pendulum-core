@@ -9,6 +9,7 @@ interface EventData {
   updatedData?: any[];
   updateOperation?: any;
   deletedData?: any[];
+  operationId: string;
 }
 
 export class EventClient {
@@ -29,8 +30,12 @@ export class EventClient {
     }
   }
 
-  async emitInsert(collection: string, insertedData: any[]) {
-    await this.sendEvent("insert", collection, { insertedData });
+  async emitInsert(
+    collection: string,
+    insertedData: any[],
+    operationId: string
+  ) {
+    await this.sendEvent("insert", collection, { insertedData, operationId });
   }
 
   async emitUpdate(
@@ -38,18 +43,26 @@ export class EventClient {
     filter: any,
     updatedData: any[],
     updateOperation: any,
+    operationId: string,
   ) {
     await this.sendEvent("update", collection, {
       filter,
       updatedData,
       updateOperation,
+      operationId,
     });
   }
 
-  async emitDelete(collection: string, filter: any, deletedData: any[]) {
+  async emitDelete(
+    collection: string,
+    filter: any,
+    deletedData: any[],
+    operationId: string
+  ) {
     await this.sendEvent("delete", collection, {
       filter,
       deletedData,
+      operationId,
     });
   }
 }
