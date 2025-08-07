@@ -26,7 +26,7 @@ export class EventClient {
       });
       console.log(`Event emitted successfully: ${eventType} for ${collection}`);
     } catch (error) {
-      console.error(`Failed to emit ${eventType} for ${collection}`);
+      console.error(`Failed to emit ${eventType} for ${collection}: ${error}`);
     }
   }
 
