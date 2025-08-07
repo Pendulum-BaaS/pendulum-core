@@ -8,12 +8,16 @@ export const eventsController = (req: Request, res: Response) => {
     Connection: "keep-alive",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Cache-Control",
+    "X-Accel-Buffering": "no",
   });
 
   res.write(
     `data: ${JSON.stringify({ type: "connection", message: "Connected to SSE Server" })}\n\n`,
   ); // send initial connection confirmation
 
+  setInterval(() => {
+    res.write(": heartbeat\n\n");
+  }, 25000);
   sseManager.addClient(res);
 
   req.on("close", () => {
