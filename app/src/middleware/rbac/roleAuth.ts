@@ -25,7 +25,7 @@ export const authenticateToken = (
   res: Response,
   next: NextFunction
 ): void => {
-  // Dev mode, skip authorization
+  // Dev mode, skip authorization, always admin
   if (process.env.NODE_ENV !== "production") {
     const devToken = jwt.sign(
       {
@@ -41,13 +41,32 @@ export const authenticateToken = (
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1]; // optional chaining, returns undefined if authHeader is undefined
 
-  if (!token) throw createError.unauthorized('Access token required', 'MISSING_TOKEN');
+  if (!token) {
+    // create token with public role if not signed in
+    const publicToken = jwt.sign(
+      {
+        userId: "anonymous",
+        role: "public",
+      },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "24h" },
+    );
+
+    req.headers.authorization = `Bearer ${publicToken}`;
+
+    req.user = {
+      userId: "anonymous",
+      role: "public",
+    };
+    next();
+    return;
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
     req.user = {
       userId: decoded.userId,
-      role: decoded.role || USER_ROLES.user, // default to user is missing
+      role: decoded.role || USER_ROLES.user, // default to user if missing
     };
     next();
   } catch(error) {
