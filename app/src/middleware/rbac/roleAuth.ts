@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
 import { UserRole, USER_ROLES } from "../../models/roleDefinitions";
 import { createError } from "../errorHandlingAndValidation/errorHandler";
-import { CollectionsManager, CollectionPermissions, collectionsManager } from "../../models/collections";
+import {
+  CollectionPermissions,
+  collectionsManager,
+} from "../../models/collections";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -58,6 +61,27 @@ export const authenticateToken = (
       userId: "anonymous",
       role: "public",
     };
+    next();
+    return;
+  }
+
+  // check if token is actually the admin access key (prod only, skips in dev)
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ADMIN_API_KEY &&
+    token === process.env.ADMIN_API_KEY
+  ) {
+    // token is currently the admin key (just signed into admin dashboard)
+    const adminToken = jwt.sign(
+      {
+        userId: "admin-user",
+        role: "admin",
+      },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "24H" },
+    );
+    req.headers.authorization = `Bearer ${adminToken}`;
+    req.user = { userId: "admin-user", role: "admin" };
     next();
     return;
   }
