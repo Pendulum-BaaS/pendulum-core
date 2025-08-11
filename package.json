@@ -1,7 +1,16 @@
 {
-  "name": "@pendulum/core",
-  "version": "1.0.0",
-  "description": "Backend Pendulum server",
+  "name": "@pendulum-baas/core",
+  "version": "1.0.1",
+  "description": "Pendulum BaaS backend server for local development",
+  "files": [
+    "app/dist/**/*",
+    "events/dist/**/*",
+    "ui/**/*",
+    "compose.yml",
+    "Dockerfile*",
+    ".dockerignore",
+    "package.json"
+  ],
   "scripts": {
     "build:app": "cd app && tsc",
     "build:events": "cd events && tsc",
