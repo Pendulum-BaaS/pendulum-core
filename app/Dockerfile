@@ -6,19 +6,12 @@ WORKDIR /app
 
 # copy package files for installing dependencies
 COPY package*.json ./
-COPY app/tsconfig.json ./
 
 # install all dependencies
-RUN npm ci
+RUN npm install --only=production
 
-COPY app/src/ ./src/
+COPY app/dist ./dist
 COPY app/ui/ ./ui/
-
-# compile ts to js
-RUN npm run build
-
-# remove dev dependencies to reduce image size
-RUN npm ci --only=production && npm cache clean --force
 
 # documenting which port should be exposed
 EXPOSE 3000

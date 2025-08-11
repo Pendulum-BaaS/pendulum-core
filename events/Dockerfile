@@ -6,18 +6,10 @@ WORKDIR /app
 
 # copy package files for installing dependencies
 COPY package*.json ./
-COPY events/tsconfig.json ./
 
-# install all dependencies
-RUN npm ci
+RUN npm install --only=production
 
-COPY events/src/ ./src/
-
-# compile ts to js
-RUN npm run build
-
-# remove dev dependencies to reduce image size
-RUN npm ci --only=production && npm cache clean --force
+COPY events/dist ./dist
 
 # documenting which port should be exposed
 EXPOSE 8080

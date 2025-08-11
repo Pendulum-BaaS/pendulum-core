@@ -1,15 +1,17 @@
 {
   "name": "@pendulum-baas/core",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Pendulum BaaS backend server for local development",
   "files": [
+    "compose.yaml",
+    "app/Dockerfile",
+    "events/Dockerfile",
     "app/dist/**/*",
     "events/dist/**/*",
-    "ui/**/*",
-    "compose.yaml",
-    "Dockerfile*",
-    ".dockerignore",
-    "package.json"
+    "app/ui/**/*",
+    "package.json",
+    "package-lock.json",
+    ".dockerignore"
   ],
   "scripts": {
     "build:app": "cd app && tsc",
