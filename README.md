@@ -94,19 +94,6 @@ View logs:
 docker compose logs -f
 ```
 
-Architecture
-┌─────────────────┐    ┌─────────────────┐
-│   App Service   │    │ Events Service  │
-│   (Port 3000)   │────│   (Port 8080)   │
-└─────────────────┘    └─────────────────┘
-         │                       │
-         └───────────────────────┘
-                     │
-              ┌──────────────┐
-              │   MongoDB    │
-              │ (Port 27017) │
-              └──────────────┘
-
 ## Database
 Collections are created automatically on first access. Default permissions apply:
 
