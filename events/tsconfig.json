@@ -10,8 +10,9 @@
     "resolveJsonModule": true,
     "declaration": false,
     "outDir": "./dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "types": ["jest", "node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "__tests__/**/*"],
   "exclude": ["node_modules", "dist"]
 }
