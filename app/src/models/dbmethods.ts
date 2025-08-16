@@ -114,9 +114,13 @@ export const updateSome = async (
 
   const db = mongoClient.db(process.env.DB_NAME);
   const collection = db.collection(collectionName);
+  const documentsToUpdate = await collection.find(filter).toArray(); // find document IDs before updating
+
   await collection.updateMany(filter, updateOperation); // Update the matching documents
 
-  const updatedDocuments = await collection.find(filter).toArray(); // Get the updated documents
+  const updatedDocuments = await collection.find({
+    _id: { $in: documentsToUpdate.map(doc => doc._id) }
+  }).toArray(); // Get the updated documents
   return updatedDocuments; // Return the actual updated documents
 };
 
