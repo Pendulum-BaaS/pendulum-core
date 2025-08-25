@@ -27,7 +27,7 @@ const isValidPermissionsObject = (permissions: any): boolean => {
     if (!Array.isArray(permissions[action])) return false; // check if each permissions CRUD action points to an array
 
     for (const role of permissions[action]) {
-      if (!isValidRole(role)) return false; // check if the array contains only peoper roles
+      if (!isValidRole(role)) return false; // check if the array contains only proper roles
     }
   }
 

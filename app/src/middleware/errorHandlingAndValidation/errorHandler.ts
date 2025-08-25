@@ -107,7 +107,7 @@ export const errorHandler = (
     stack: err.stack,
     url: req.url,
     method: req.method,
-    timestamp: new Date().toISOString(), // international standard for date/time
+    timestamp: new Date().toISOString(),
     statusCode,
   });
 

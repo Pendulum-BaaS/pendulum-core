@@ -124,7 +124,7 @@ export const requireResourceAccess = (action: keyof CollectionPermissions) => {
     try {
       const collectionName = getCollectionName(req);
 
-      // create collection if it doesn't exist MAKE SURE WE WANT THIS!!!!!!!!!!
+      // create collection if it doesn't exist
       if (!(await collectionsManager.collectionExists(collectionName))) {
         await collectionsManager.createCollection(collectionName, user.userId);
       }

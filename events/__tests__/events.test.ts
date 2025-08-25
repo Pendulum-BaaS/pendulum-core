@@ -16,7 +16,7 @@ describe('Real-time Events Service', () => {
       }
     };
 
-    // Test the main workflow: emit → broadcast → clients receive
+    // Test the main workflow: emit → broadcast → clients recieve
     eventEmitter.once('insert', (event) => {
       expect(event.collection).toBe('test_items');
       expect(event.action).toBe('insert');

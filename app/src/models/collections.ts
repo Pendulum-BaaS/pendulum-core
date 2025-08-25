@@ -1,5 +1,5 @@
 import { UserRole } from "./roleDefinitions";
-import { mongoClient } from "./mongoClient"; // already configured MongoDB client instance that handles both local and AWS DocumentDB connections
+import { mongoClient } from "./mongoClient"; // configured MongoDB client instance handles both local & AWS DocumentDB connections
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -20,7 +20,7 @@ interface CollectionMetadata {
 
 export class CollectionsManager {
   private collections: { [key: string]: CollectionMetadata } = {};
-  private readonly COLLECTION_METADATA = 'collection_metadata'; // Need this as a constant???
+  private readonly COLLECTION_METADATA = 'collection_metadata';
   private initPromise: Promise<void> | null = null; // Lazy initialization with Promise caching
   private defaultPermissions: CollectionPermissions = {
     create: ['admin', 'user', 'public'],
@@ -63,7 +63,7 @@ export class CollectionsManager {
     await this.ensureInitialized();
 
     if (collectionName in this.collections) {
-      throw new Error(`Collection ${collectionName} already exists`); // USE CUSTOM ERROR CLASS
+      throw new Error(`Collection ${collectionName} already exists`);
     }
 
     const collectionMetadata: CollectionMetadata = {
@@ -81,7 +81,7 @@ export class CollectionsManager {
 
       this.collections[collectionName] = collectionMetadata;
     } catch (error) {
-      console.error('Failed to save collection to database:', error); // USE CUSTOM ERROR CLASS
+      console.error('Failed to save collection to database:', error);
       throw error;
     }
 
@@ -119,7 +119,7 @@ export class CollectionsManager {
     await this.ensureInitialized();
 
     const collection = this.collections[collectionName];
-    if (!collection) throw new Error(`Collection ${collectionName} does not exist`); // USE CUSTOM ERROR CLASS
+    if (!collection) throw new Error(`Collection ${collectionName} does not exist`);
 
     const roleAllowed = collection.permissions[action].includes(userRole);
     const isCreator = await this.isCollectionCreator(userId, collectionName);
@@ -154,7 +154,7 @@ export class CollectionsManager {
     const collection = this.collections[collectionName];
     if (!collection) throw new Error(`Collection ${collectionName} does not exist`);
 
-    const updatedPermissions = { // needed deep copy
+    const updatedPermissions = {
       ...JSON.parse(JSON.stringify(collection.permissions)),
       ...JSON.parse(JSON.stringify(newPermissions)),
     };
