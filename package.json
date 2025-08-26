@@ -30,8 +30,33 @@
     "test:coverage": "jest --coverage"
 
   },
-  "author": "",
+    "keywords": [
+    "baas",
+    "backend-as-a-service",
+    "self-hosted",
+    "mongodb",
+    "real-time",
+    "reactive",
+    "authentication",
+    "rbac",
+    "microservices",
+    "docker",
+    "express",
+    "admin-dashboard"
+  ],
+  "author": "Pendulum Team",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pendulum-BaaS/pendulum-core.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pendulum-BaaS/pendulum-core/issues"
+  },
+  "homepage": "https://github.com/Pendulum-BaaS/pendulum-core#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
