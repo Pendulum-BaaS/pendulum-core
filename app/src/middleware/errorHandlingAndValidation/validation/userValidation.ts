@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { createError } from "../errorHandler";
-import { UserRole, USER_ROLES } from "../../../models/roleDefinitions";
+import { USER_ROLES } from "../../../models/roleDefinitions";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_MIN = 3;
 const USERNAME_MAX = 20;
 const USERNAME_REGEX = /^[a-zA-Z0-9_-]+$/; // alphanumeric, underscores, hyphens
 const PASSWORD_MIN = 3;
-// const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/; // At least one lowercase, uppercase, and number
 
 const isValidEmail = (email: string): boolean => {
   return typeof email === 'string' && EMAIL_REGEX.test(email.trim());
@@ -17,7 +16,6 @@ const isValidPassword = (password: string): boolean => {
   return (
     typeof password === 'string' &&
     password.length >= PASSWORD_MIN
-    // && PASSWORD_REGEX.test(password)
   );
 }
 
@@ -54,7 +52,7 @@ export const validateRegistration = (
   );
 
   if (!isValidPassword(password)) throw createError.badRequest(
-    `Password must be at least ${PASSWORD_MIN} characters`, // and contain at least one lowercase letter, one uppercase letter, and one number
+    `Password must be at least ${PASSWORD_MIN} characters`,
     'INVALID_PASSWORD'
   );
 
@@ -178,7 +176,7 @@ export const validatePasswordChange = (
   );
 
   if (!isValidPassword(newPassword)) throw createError.badRequest(
-    `New password must be at least ${PASSWORD_MIN} characters`, // and contain at least one lowercase letter, one uppercase letter, and one number
+    `New password must be at least ${PASSWORD_MIN} characters`,
     'INVALID_PASSWORD'
   );
 
