@@ -1,6 +1,6 @@
 {
   "name": "@pendulum-baas/core",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Pendulum BaaS backend server for local development",
   "files": [
     "compose.yaml",
